@@ -1,0 +1,224 @@
+import React, { useEffect, useState } from 'react';
+import { FaFileCircleCheck } from 'react-icons/fa6';
+import { FaEdit, FaTrash, FaUserAlt } from 'react-icons/fa';
+import { IoStorefront } from 'react-icons/io5';
+import { TbMessageReportFilled } from 'react-icons/tb';
+import { MdRateReview } from 'react-icons/md';
+import { RiLogoutCircleLine } from "react-icons/ri";
+import { editUser, getAllUsers, getAllBusinesses } from "../../api";
+import EditUserModal from "./components/EditUserModal.tsx";
+import { useNavigate } from "react-router-dom";
+import { User, Business } from "../../interfaces";
+
+const AdminDashboard: React.FC = () => {
+    const navigate = useNavigate();
+
+    const [isUsers, setIsUsers] = useState<boolean>(true); // default
+    const [isBusi, setIsBusi] = useState<boolean>(false);
+    const [isDispute, setIsDispute] = useState<boolean>(false);
+    const [isReviews, setIsReviews] = useState<boolean>(false);
+    const [isVerifications, setIsVerifications] = useState<boolean>(false);
+
+    const [users, setUsers] = useState<User[]>([]);
+    const [businesses, setBusinesses] = useState<Business[]>([]);
+
+    // displays
+    useEffect(() => {
+        if (isUsers) {
+            fetchUsers();
+        } else if (isBusi) {
+            fetchBusinesses();
+        }
+    }, [isUsers]);
+    const fetchUsers = async () => {
+        try {
+            const response = await getAllUsers();
+            setUsers(response);
+        } catch (error) {
+            console.error('Failed to fetch users:', error);
+        }
+    };
+    const fetchBusinesses = async () => {
+        try {
+            const response = await getAllBusinesses();
+            setBusinesses(response);
+        } catch (error) {
+            console.error('Failed to fetch businesses:', error);
+        }
+    };
+    const toggleView = (view: string) => {
+        setIsUsers(view === 'users');
+        setIsBusi(view === 'businesses');
+        setIsDispute(view === 'disputes');
+        setIsReviews(view === 'reviews');
+        setIsVerifications(view === 'verifications');
+    };
+
+    // editing user
+    const [selectedUser, setSelectedUser] = useState<User | null>(null);
+    const handleEditUser = (user: User) => {
+        setSelectedUser(user);
+    };
+    const closeModal = () => setSelectedUser(null);
+    const saveUser = async (updatedUser: Partial<User>) => {
+        await editUser(selectedUser!.user_id, updatedUser);
+        closeModal();
+        fetchUsers();  // Refresh list
+    };
+
+    // deleting user
+    const handleDeleteUser = (userId: number, userType: string) => {
+        if (userType === 'BUSINESS_OWNER') {
+            alert('Cannot delete a business owner directly. Delete the business first.');
+            return;
+        }
+        if (confirm('Are you sure you want to delete this user?')) {
+            // Call delete API
+            console.log('Deleting user', userId);
+        }
+    };
+
+
+    return (
+        <div className="h-full w-full flex overflow-hidden antialiased text-gray-800 bg-white min-h-screen">
+            {/* Sidebar */}
+            <nav className="flex-none flex flex-col items-center text-center bg-white text-gray-400 border-r">
+                <div className="h-16 flex items-center w-full">
+                    <img className="h-6 w-6 mx-auto" src="/trompo.svg" alt="Logo" />
+                </div>
+                <div className="flex flex-col items-center p-6">
+                    <ul className="w-full">
+                        <SidebarItem icon={<FaUserAlt />} onClick={() => toggleView('users')} />
+                        <SidebarItem icon={<IoStorefront />} onClick={() => toggleView('businesses')} />
+                        <SidebarItem icon={<TbMessageReportFilled />} onClick={() => toggleView('disputes')} />
+                        <SidebarItem icon={<MdRateReview />} onClick={() => toggleView('reviews')} />
+                        <SidebarItem icon={<FaFileCircleCheck />} onClick={() => toggleView('verifications')} />
+                        <SidebarItem icon={<RiLogoutCircleLine />} onClick={() => navigate('/')} />
+                    </ul>
+                </div>
+            </nav>
+
+            {/* Main Content */}
+            <div className="flex-1 flex flex-col">
+                <header className="flex h-16 bg-gray-100 border-t px-4 items-center">
+                    <h1 className="font-semibold text-lg">Admin Dashboard</h1>
+                </header>
+                <main className="flex-grow flex min-h-0 border-t">
+                    {isUsers && (
+                        <section className="p-4 w-full">
+                            <h2 className="font-bold text-tr-0 mb-4">Users</h2>
+                            <div className="overflow-x-auto">
+                                <table className="min-w-full bg-white border border-gray-300 rounded-lg shadow">
+                                    <thead className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                                    <tr>
+                                        <th className="py-3 px-6 text-left">Name</th>
+                                        <th className="py-3 px-6 text-left">Email</th>
+                                        <th className="py-3 px-6 text-left">Phone</th>
+                                        <th className="py-3 px-6 text-left">Role</th>
+                                        <th className="py-3 px-6 text-left">Verified</th>
+                                        <th className="py-3 px-6 text-left">Registered Date</th>
+                                        <th className="py-3 px-6 text-left">Actions</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody className="text-gray-600 text-sm">
+                                    {users.map((user) => (
+                                        <tr key={user.user_id} className="border-b hover:bg-gray-100 group">
+                                            <td className="py-3 px-6 text-left whitespace-nowrap">
+                                                {user.first_name} {user.last_name}
+                                            </td>
+                                            <td className="py-3 px-6 text-left">{user.email}</td>
+                                            <td className="py-3 px-6 text-left">{user.phone_number}</td>
+                                            <td className="py-3 px-6 text-left">{user.user_type}</td>
+                                            <td className="py-3 px-6 text-left">
+                                                {user.is_verified ? "✅" : "❌"}
+                                            </td>
+                                            <td className="py-3 px-6 text-left">
+                                                {new Date(user.date_registered).toLocaleDateString()}
+                                            </td>
+                                            <td className="py-3 px-6 text-left">
+                                                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <button
+                                                        className="text-green-500 hover:text-green-700"
+                                                        onClick={() => handleEditUser(user)}
+                                                    >
+                                                        <FaEdit />
+                                                    </button>
+                                                    <button
+                                                        className="text-red-500 hover:text-red-700"
+                                                        onClick={() => handleDeleteUser(user.user_id, user.user_type)}
+                                                    >
+                                                        <FaTrash />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    </tbody>
+                                    {selectedUser && (
+                                        <EditUserModal
+                                            user={selectedUser}
+                                            onClose={closeModal}
+                                            onSave={saveUser}
+                                        />
+                                    )}
+                                </table>
+                            </div>
+                        </section>
+                    )}
+                    {isBusi && (
+                        <section className="p-4 w-full">
+                            <h2 className="font-bold text-tr-0 mb-4">Businesses</h2>
+                            <div className="overflow-x-auto">
+                                <table className="min-w-full bg-white border border-gray-300 rounded-lg shadow">
+                                    <thead className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                                    <tr>
+                                        <th className="py-3 px-6 text-left">Name</th>
+                                        <th className="py-3 px-6 text-left">Owned by</th>
+                                        <th className="py-3 px-6 text-left">Description</th>
+                                        <th className="py-3 px-6 text-left">Category</th>
+                                        <th className="py-3 px-6 text-left">Address</th>
+                                        <th className="py-3 px-6 text-left">Contact Number</th>
+                                        <th className="py-3 px-6 text-left">Verified</th>
+                                        <th className="py-3 px-6 text-left">Registered Date</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody className="text-gray-600 text-sm">
+                                    {businesses.map((business) => (
+                                        <tr key={business.business_id} className="border-b hover:bg-gray-100 group">
+                                            <td className="py-3 px-6 text-left whitespace-nowrap">
+                                                {business.business_name}
+                                            </td>
+                                            <td className="py-3 px-6 text-left">{business.user_id}</td>
+                                            <td className="py-3 px-6 text-left">{business.description}</td>
+                                            <td className="py-3 px-6 text-left">{business.Category.category_name}</td>
+                                            <td className="py-3 px-6 text-left">{business.address}</td>
+                                            <td className="py-3 px-6 text-left">{business.contact_number}</td>
+                                            <td className="py-3 px-6 text-left">
+                                                {business.is_verified ? "✅" : "❌"}
+                                            </td>
+                                            <td className="py-3 px-6 text-left">
+                                                {new Date(business.date_registered).toLocaleDateString()}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
+                    )}
+                </main>
+            </div>
+        </div>
+    );
+};
+
+const SidebarItem: React.FC<{ icon: React.ReactNode; onClick: () => void }> = ({ icon, onClick }) => (
+    <li
+        className="font-semibold text-tr-0 hover:bg-gray-300 hover:rounded-2xl p-2 cursor-pointer flex flex-row items-center py-4"
+        onClick={onClick}
+    >
+        {icon}
+    </li>
+);
+
+export default AdminDashboard;
