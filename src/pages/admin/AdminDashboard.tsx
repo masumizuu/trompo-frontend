@@ -5,10 +5,11 @@ import { IoStorefront } from 'react-icons/io5';
 import { TbMessageReportFilled } from 'react-icons/tb';
 import { MdRateReview } from 'react-icons/md';
 import { RiLogoutCircleLine } from "react-icons/ri";
-import { editUser, getAllUsers, getAllBusinesses } from "../../api";
+import { editUser, deleteUser, getAllUsers, getAllBusinesses, getAllDisputes, resolveDispute } from "../../api";
 import EditUserModal from "./components/EditUserModal.tsx";
+import DisputeModal from "./components/DisputeModal.tsx";
 import { useNavigate } from "react-router-dom";
-import { User, Business } from "../../interfaces";
+import { User, Business, Dispute } from "../../interfaces";
 
 const AdminDashboard: React.FC = () => {
     const navigate = useNavigate();
@@ -21,15 +22,16 @@ const AdminDashboard: React.FC = () => {
 
     const [users, setUsers] = useState<User[]>([]);
     const [businesses, setBusinesses] = useState<Business[]>([]);
+    const [disputes, setDisputes] = useState<Dispute[]>([]);
+    const [selectedDispute, setSelectedDispute] = useState<Dispute | null>(null);
 
     // displays
     useEffect(() => {
-        if (isUsers) {
-            fetchUsers();
-        } else if (isBusi) {
-            fetchBusinesses();
-        }
-    }, [isUsers]);
+        if (isUsers) fetchUsers();
+        if (isBusi) fetchBusinesses();
+        if (isDispute) fetchDisputes();
+    }, [isUsers, isBusi, isDispute]);
+
     const fetchUsers = async () => {
         try {
             const response = await getAllUsers();
@@ -46,6 +48,11 @@ const AdminDashboard: React.FC = () => {
             console.error('Failed to fetch businesses:', error);
         }
     };
+    const fetchDisputes = async () => {
+        try { setDisputes(await getAllDisputes()); } catch (error) {
+            console.error('Failed to fetch disputes:', error);
+        }
+    };
     const toggleView = (view: string) => {
         setIsUsers(view === 'users');
         setIsBusi(view === 'businesses');
@@ -54,7 +61,7 @@ const AdminDashboard: React.FC = () => {
         setIsVerifications(view === 'verifications');
     };
 
-    // editing user
+    // USERS
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
     const handleEditUser = (user: User) => {
         setSelectedUser(user);
@@ -65,19 +72,37 @@ const AdminDashboard: React.FC = () => {
         closeModal();
         fetchUsers();  // Refresh list
     };
-
-    // deleting user
-    const handleDeleteUser = (userId: number, userType: string) => {
+    const handleDeleteUser = async (userId: number, userType: string) => {
         if (userType === 'BUSINESS_OWNER') {
             alert('Cannot delete a business owner directly. Delete the business first.');
             return;
         }
+
         if (confirm('Are you sure you want to delete this user?')) {
-            // Call delete API
-            console.log('Deleting user', userId);
+            try {
+                await deleteUser(userId);
+                alert('User deleted successfully.');
+                fetchUsers(); // Refresh the user list after deletion
+            } catch (error) {
+                console.error('Failed to delete user:', error);
+                alert(error.message || 'Failed to delete user.');
+            }
         }
     };
 
+    // BUSINESSES
+
+    // DISPUTES
+    const closeDispute = () => setSelectedDispute(null);
+    const handleResolveDispute = async (disputeId: number, adminResponse: string) => {
+        try {
+            await resolveDispute(disputeId, "RESOLVED", adminResponse);
+            fetchDisputes();
+            closeDispute();
+        } catch (error) {
+            console.error("Error resolving dispute:", error);
+        }
+    };
 
     return (
         <div className="h-full w-full flex overflow-hidden antialiased text-gray-800 bg-white min-h-screen">
@@ -204,6 +229,51 @@ const AdminDashboard: React.FC = () => {
                                     </tbody>
                                 </table>
                             </div>
+                        </section>
+                    )}
+                    {isDispute && (
+                        <section className="p-4 w-full">
+                            <h2 className="font-bold text-tr-0 mb-4">Disputes</h2>
+                            <table className="min-w-full bg-white border rounded-lg shadow">
+                                <thead className="bg-gray-200">
+                                <tr>
+                                    <th className="py-3 px-6 text-left">Complainant</th>
+                                    <th className="py-3 px-6 text-left">Transaction ID</th>
+                                    <th className="py-3 px-6 text-left">Reason</th>
+                                    <th className="py-3 px-6 text-left">Status</th>
+                                    <th className="py-3 px-6 text-left">Actions</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {disputes.map((dispute) => (
+                                    <tr key={dispute.dispute_id} className="border-b hover:bg-gray-100 group">
+                                        <td className="py-3 px-6 text-left">{dispute.Complainant.first_name} {dispute.Complainant.last_name}</td>
+                                        <td className="py-3 px-6 text-left">{dispute.transaction_id}</td>
+                                        <td className="py-3 px-6 text-left">{dispute.reason}</td>
+                                        <td className="py-3 px-6 text-left">{dispute.status}</td>
+                                        <td className="py-3 px-6 text-left">
+                                            <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                                {dispute.status === "PENDING" && ( // ✅ Only show button if status is PENDING
+                                                    <button
+                                                        className="text-green-500 hover:text-green-700"
+                                                        onClick={() => setSelectedDispute(dispute)}
+                                                    >
+                                                        Resolve
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                                </tbody>
+                            </table>
+                            {selectedDispute && (
+                                <DisputeModal
+                                    dispute={selectedDispute}
+                                    onClose={() => setSelectedDispute(null)}
+                                    onResolve={handleResolveDispute}
+                                />
+                            )}
                         </section>
                     )}
                 </main>

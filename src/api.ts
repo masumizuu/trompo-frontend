@@ -129,3 +129,293 @@ export const getAllBusinesses = async () => {
 
     return await response.json();
 };
+
+// ✅ Update Business (Only Owner or Admin)
+export const updateBusiness = async (business_id: number, user_id: number, businessData: Partial<{
+    business_name: string;
+    description: string;
+    category_id: number;
+    address: string;
+    contact_number: string;
+    website_url?: string;
+}>) => {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${API_BASE_URL}/businesses/${business_id}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({ user_id, ...businessData }),
+    });
+
+    if (!response.ok) {
+        throw new Error("Failed to update business.");
+    }
+
+    return await response.json();
+};
+
+// ✅ Delete Business (Only Owner or Admin)
+export const deleteBusiness = async (business_id: number, user_id: number) => {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${API_BASE_URL}/businesses/${business_id}`, {
+        method: "DELETE",
+        headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ user_id }),
+    });
+
+    if (!response.ok) {
+        throw new Error("Failed to delete business.");
+    }
+
+    return await response.json();
+};
+
+/////////////////////////////////////////////////////////
+// DISPUTE CALLS
+/////////////////////////////////////////////////////////
+
+// ✅ File a Dispute
+export const fileDispute = async (user_id: number, transaction_id: number, reason: string) => {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${API_BASE_URL}/disputes/file`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({ user_id, transaction_id, reason }),
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to file dispute.");
+    }
+
+    return await response.json();
+};
+
+// ✅ Get all pending disputes (Admin only)
+export const getPendingDisputes = async () => {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${API_BASE_URL}/disputes/pending`, {
+        method: "GET",
+        headers: {
+            "Authorization": `Bearer ${token}`,
+        },
+    });
+
+    if (!response.ok) {
+        throw new Error("Failed to fetch pending disputes.");
+    }
+
+    return await response.json();
+};
+
+// ✅ Get all disputes (Admin only)
+export const getAllDisputes = async () => {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${API_BASE_URL}/disputes/all`, {
+        method: "GET",
+        headers: {
+            "Authorization": `Bearer ${token}`,
+        },
+    });
+
+    if (!response.ok) {
+        throw new Error("Failed to fetch all disputes.");
+    }
+
+    return await response.json();
+};
+
+// ✅ Resolve a dispute (Admin only)
+export const resolveDispute = async (dispute_id: number, status: string, admin_response: string) => {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${API_BASE_URL}/disputes/${dispute_id}/resolve`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({ status, admin_response }),
+    });
+
+    if (!response.ok) {
+        throw new Error("Failed to resolve dispute.");
+    }
+
+    return await response.json();
+};
+
+/////////////////////////////////////////////////////////
+// REVIEW CALLS
+/////////////////////////////////////////////////////////
+
+// ✅ Create a Review
+export const createReview = async (user_id: number, business_id: number, rating: number, review_text: string, media: string[]) => {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${API_BASE_URL}/reviews/create`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({ user_id, business_id, rating, review_text, media }),
+    });
+
+    if (!response.ok) {
+        throw new Error("Failed to submit review.");
+    }
+
+    return await response.json();
+};
+
+// ✅ Get all reviews for a business
+export const getBusinessReviews = async (business_id: number) => {
+    const response = await fetch(`${API_BASE_URL}/reviews/${business_id}`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+        },
+    });
+
+    if (!response.ok) {
+        throw new Error("Failed to fetch business reviews.");
+    }
+
+    return await response.json();
+};
+
+// ✅ Get all reviews (Admin only)
+export const getAllReviews = async () => {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${API_BASE_URL}/reviews`, {
+        method: "GET",
+        headers: {
+            "Authorization": `Bearer ${token}`,
+        },
+    });
+
+    if (!response.ok) {
+        throw new Error("Failed to fetch all reviews.");
+    }
+
+    return await response.json();
+};
+
+// ✅ Delete a Review (Admin Only)
+export const deleteReview = async (review_id: number, admin_id: number, reason: string) => {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${API_BASE_URL}/reviews/${review_id}`, {
+        method: "DELETE",
+        headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ admin_id, reason }),
+    });
+
+    if (!response.ok) {
+        throw new Error("Failed to delete review.");
+    }
+
+    return await response.json();
+};
+
+/////////////////////////////////////////////////////////
+// TRANSACTION CALLS
+/////////////////////////////////////////////////////////
+
+// ✅ Create a Transaction
+export const createTransaction = async (customer_id: number, business_id: number, items: { sellable_id: number; quantity: number }[]) => {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${API_BASE_URL}/transactions/create`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({ customer_id, business_id, items }),
+    });
+
+    if (!response.ok) {
+        throw new Error("Failed to create transaction.");
+    }
+
+    return await response.json();
+};
+
+// ✅ Get transactions for a specific user
+export const getUserTransactions = async (user_id: number) => {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${API_BASE_URL}/transactions/${user_id}`, {
+        method: "GET",
+        headers: {
+            "Authorization": `Bearer ${token}`,
+        },
+    });
+
+    if (!response.ok) {
+        throw new Error("Failed to fetch user transactions.");
+    }
+
+    return await response.json();
+};
+
+// ✅ Business Owner Marks Transaction as Completed
+export const markTransactionCompleted = async (transaction_id: number, user_id: number) => {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${API_BASE_URL}/transactions/${transaction_id}/complete`, {
+        method: "PUT",
+        headers: {
+            "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({ user_id }),
+    });
+
+    if (!response.ok) {
+        throw new Error("Failed to complete transaction.");
+    }
+
+    return await response.json();
+};
+
+// ✅ Customer Confirms Completion or Marks as Incomplete
+export const confirmOrRejectTransaction = async (transaction_id: number, user_id: number, status: "FINISHED" | "INCOMPLETE", reason_incomplete?: string) => {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${API_BASE_URL}/transactions/${transaction_id}/confirm`, {
+        method: "PUT",
+        headers: {
+            "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({ user_id, status, reason_incomplete }),
+    });
+
+    if (!response.ok) {
+        throw new Error("Failed to update transaction status.");
+    }
+
+    return await response.json();
+};
+
+// ✅ Get all transactions (Admin only)
+export const getAllTransactions = async () => {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${API_BASE_URL}/transactions`, {
+        method: "GET",
+        headers: {
+            "Authorization": `Bearer ${token}`,
+        },
+    });
+
+    if (!response.ok) {
+        throw new Error("Failed to fetch all transactions.");
+    }
+
+    return await response.json();
+};

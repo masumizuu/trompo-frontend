@@ -46,6 +46,18 @@ export interface Business {
     date_registered: string;
 }
 
+export interface Dispute {
+    dispute_id: number;
+    transaction_id: number;
+    complainant_id: number;
+    reason: string;
+    status: "PENDING" | "RESOLVED" | "DISMISSED";
+    admin_response?: string;
+    Complainant: User; // For frontend ease-of-use
+}
+
+// COMPONENTS PROPS
+
 export interface EditUserModalProps {
     user: {
         user_id: number;
@@ -58,4 +70,10 @@ export interface EditUserModalProps {
     };
     onClose: () => void;
     onSave: (updatedUser: any) => void;
+}
+
+export interface DisputeModalProps {
+    dispute: Dispute;
+    onClose: () => void;
+    onResolve: (disputeId: number, adminResponse: string) => void;
 }
