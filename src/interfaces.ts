@@ -56,6 +56,19 @@ export interface Dispute {
     Complainant: User; // For frontend ease-of-use
 }
 
+export interface Review {
+    review_id: number;
+    user_id: number;
+    business_id: number;
+    rating: number; // 1-5 stars
+    review_text?: string;
+    media: string[]; // Array of image/video URLs
+    review_date: string;
+    is_verified: boolean;
+    User: User; // For frontend ease-of-use
+    Business: Business; // For frontend ease-of-use
+}
+
 // COMPONENTS PROPS
 
 export interface EditUserModalProps {
@@ -76,4 +89,10 @@ export interface DisputeModalProps {
     dispute: Dispute;
     onClose: () => void;
     onResolve: (disputeId: number, adminResponse: string) => void;
+}
+
+export interface ReviewModalProps {
+    review: Review;
+    onClose: () => void;
+    onDelete: (reviewId: number, reason: string) => void;
 }

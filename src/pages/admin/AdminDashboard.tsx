@@ -5,14 +5,17 @@ import { IoStorefront } from 'react-icons/io5';
 import { TbMessageReportFilled } from 'react-icons/tb';
 import { MdRateReview } from 'react-icons/md';
 import { RiLogoutCircleLine } from "react-icons/ri";
-import { editUser, deleteUser, getAllUsers, getAllBusinesses, getAllDisputes, resolveDispute } from "../../api";
+import { editUser, deleteUser, getAllUsers, getAllBusinesses, resolveDispute, getAllDisputes, deleteReview, getAllReviews} from "../../api";
 import EditUserModal from "./components/EditUserModal.tsx";
 import DisputeModal from "./components/DisputeModal.tsx";
 import { useNavigate } from "react-router-dom";
-import { User, Business, Dispute } from "../../interfaces";
+import { User, Business, Dispute, Review } from "../../interfaces";
+import ReviewModal from "./components/ReviewModal.tsx";
 
 const AdminDashboard: React.FC = () => {
     const navigate = useNavigate();
+    const id = localStorage.getItem("user_id");
+    const adminId = Number(id);
 
     const [isUsers, setIsUsers] = useState<boolean>(true); // default
     const [isBusi, setIsBusi] = useState<boolean>(false);
@@ -24,13 +27,16 @@ const AdminDashboard: React.FC = () => {
     const [businesses, setBusinesses] = useState<Business[]>([]);
     const [disputes, setDisputes] = useState<Dispute[]>([]);
     const [selectedDispute, setSelectedDispute] = useState<Dispute | null>(null);
+    const [reviews, setReviews] = useState<Review[]>([]);
+    const [selectedReview, setSelectedReview] = useState<Review | null>(null);
 
     // displays
     useEffect(() => {
         if (isUsers) fetchUsers();
         if (isBusi) fetchBusinesses();
         if (isDispute) fetchDisputes();
-    }, [isUsers, isBusi, isDispute]);
+        if (isReviews) fetchReviews();
+    }, [isUsers, isBusi, isDispute, isReviews]);
 
     const fetchUsers = async () => {
         try {
@@ -51,6 +57,11 @@ const AdminDashboard: React.FC = () => {
     const fetchDisputes = async () => {
         try { setDisputes(await getAllDisputes()); } catch (error) {
             console.error('Failed to fetch disputes:', error);
+        }
+    };
+    const fetchReviews = async () => {
+        try { setReviews(await getAllReviews()); } catch (error) {
+            console.error('Failed to fetch reviews:', error);
         }
     };
     const toggleView = (view: string) => {
@@ -103,6 +114,8 @@ const AdminDashboard: React.FC = () => {
             console.error("Error resolving dispute:", error);
         }
     };
+
+    // REVIEWS
 
     return (
         <div className="h-full w-full flex overflow-hidden antialiased text-gray-800 bg-white min-h-screen">
@@ -272,6 +285,53 @@ const AdminDashboard: React.FC = () => {
                                     dispute={selectedDispute}
                                     onClose={() => setSelectedDispute(null)}
                                     onResolve={handleResolveDispute}
+                                />
+                            )}
+                        </section>
+                    )}
+                    {isReviews && (
+                        <section className="p-4 w-full">
+                            <h2 className="font-bold mb-4">Reviews</h2>
+                            <table className="min-w-full bg-white border rounded-lg shadow">
+                                <thead className="bg-gray-200">
+                                <tr>
+                                    <th className="py-3 px-6">Reviewer</th>
+                                    <th className="py-3 px-6">Business</th>
+                                    <th className="py-3 px-6">Rating</th>
+                                    <th className="py-3 px-6">Review</th>
+                                    <th className="py-3 px-6">Actions</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {reviews.map((review) => (
+                                    <tr key={review.review_id} className="border-b hover:bg-gray-100 group">
+                                        <td className="py-3 px-6">{review.User.first_name} {review.User.last_name}</td>
+                                        <td className="py-3 px-6">{review.Business.business_name}</td>
+                                        <td className="py-3 px-6">{review.rating}</td>
+                                        <td className="py-3 px-6">{review.review_text}</td>
+                                        <td className="py-3 px-6">
+                                            <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button
+                                                    className="text-blue-500 hover:text-blue-700"
+                                                    onClick={() => setSelectedReview(review)}
+                                                >
+                                                    View
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                                </tbody>
+                            </table>
+                            {selectedReview && (
+                                <ReviewModal
+                                    review={selectedReview}
+                                    onClose={() => setSelectedReview(null)}
+                                    onDelete={async (reviewId: number, reason: string) => {
+                                        await deleteReview(reviewId, adminId, reason);
+                                        fetchReviews();
+                                        setSelectedReview(null);
+                                    }}
                                 />
                             )}
                         </section>

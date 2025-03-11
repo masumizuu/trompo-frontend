@@ -22,6 +22,7 @@ function LoginForm() {
             localStorage.setItem("token", data.token);
             localStorage.setItem("user_type", data.user.user_type);
             localStorage.setItem("profile_photo", data.user.profile_photo);
+            localStorage.setItem("user_id", data.user.user_id.toString());
 
             // Redirect based on user_type
             if (data.user.user_type === "ADMIN") {
