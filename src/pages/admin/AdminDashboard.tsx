@@ -363,26 +363,26 @@ const AdminDashboard: React.FC = () => {
                     )}
                     {isUserVerifications && (
                         <section className="p-4 w-full">
-                            <h2 className="font-bold mb-4">User Verifications</h2>
+                            <h2 className="font-bold mb-4 text-tr-0">User Verifications</h2>
                             <table className="min-w-full bg-white border rounded-lg shadow">
                                 <thead className="bg-gray-200">
                                 <tr>
-                                    <th className="py-3 px-6">User</th>
-                                    <th className="py-3 px-6">Status</th>
-                                    <th className="py-3 px-6">Actions</th>
+                                    <th className="py-3 px-6 text-left">User</th>
+                                    <th className="py-3 px-6 text-left">Status</th>
+                                    <th className="py-3 px-6 text-left">Actions</th>
                                 </tr>
                                 </thead>
                                 <tbody>
                                 {userVerifications.map((verification) => (
                                     <tr key={verification.verification_id} className="border-b hover:bg-gray-100 group">
-                                        <td className="py-3 px-6">
+                                        <td className="py-3 px-6 text-left">
                                             {verification.User?.first_name} {verification.User?.last_name}
                                         </td>
-                                        <td className="py-3 px-6">{verification.status}</td>
-                                        <td className="py-3 px-6">
+                                        <td className="py-3 px-6 text-left">{verification.status}</td>
+                                        <td className="py-3 px-6 text-left">
                                             <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <button
-                                                    className="text-blue-500 hover:text-blue-700"
+                                                    className="text-tr-0 hover:border-tr-0"
                                                     onClick={() => setSelectedVerification(verification)}
                                                 >
                                                     View
@@ -413,8 +413,7 @@ const AdminDashboard: React.FC = () => {
                             <table className="min-w-full bg-white border rounded-lg shadow">
                                 <thead className="bg-gray-200">
                                 <tr>
-                                    <th className="py-3 px-6 text-left">Business Name</th>
-                                    <th className="py-3 px-6 text-left">Request Date</th>
+                                    <th className="py-3 px-6 text-left">Business</th>
                                     <th className="py-3 px-6 text-left">Status</th>
                                     <th className="py-3 px-6 text-left">Actions</th>
                                 </tr>
@@ -422,13 +421,12 @@ const AdminDashboard: React.FC = () => {
                                 <tbody>
                                 {businessVerifications.map((request) => (
                                     <tr key={request.request_id} className="border-b hover:bg-gray-100 group">
-                                        <td className="py-3 px-6 text-left">{request.Business.business_name}</td>
-                                        <td className="py-3 px-6 text-left">{new Date(request.request_date).toLocaleDateString()}</td>
+                                        <td className="py-3 px-6 text-left">{request.Business?.business_name}</td>
                                         <td className="py-3 px-6 text-left">{request.status}</td>
                                         <td className="py-3 px-6 text-left">
                                             <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <button
-                                                    className="text-tr-0 hover:border-tr-0 mr-2"
+                                                    className="text-tr-0 hover:border-tr-0"
                                                     onClick={() => setSelectedRequest(request)}
                                                 >
                                                     View
@@ -440,14 +438,12 @@ const AdminDashboard: React.FC = () => {
                                 </tbody>
                             </table>
 
-                            {/* IN THE MODAL, FIX APPROVE DENY STATUS PASSING */}
-
                             {selectedRequest && (
                                 <RequestModal
                                     request={selectedRequest}
                                     onClose={() => setSelectedRequest(null)}
-                                    onAction={async (requestId: number, action: "APPROVED" | "DENIED", reason?: string) => {
-                                        await reviewBusinessVerification(requestId, action, adminId, reason || "");
+                                    onAction={async (requestId: number, status: "APPROVED" | "DENIED", reason?: string) => {
+                                        await reviewBusinessVerification(requestId, status, adminId, reason);
                                         fetchBusinessVerifications();
                                         setSelectedRequest(null);
                                     }}
