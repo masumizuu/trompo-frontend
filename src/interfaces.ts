@@ -69,6 +69,32 @@ export interface Review {
     Business: Business; // For frontend ease-of-use
 }
 
+export interface UserVerification {
+    verification_id: number;
+    user_id: number;
+    id_image: string; // Path to uploaded ID image
+    status: "PENDING" | "APPROVED" | "DENIED";
+    reviewed_by?: number | null; // Admin ID (optional)
+    response_date?: string | null; // ISO Date string
+    denial_reason?: string | null;
+    User?: {
+        first_name: string;
+        last_name: string;
+    }; // Populated when fetching with User details
+}
+
+export interface VerificationRequest {
+    request_id: number;
+    business_id: number;
+    status: "PENDING" | "APPROVED" | "DENIED";
+    business_permit: string; // Image URL
+    request_date: string;
+    reviewed_by?: number;
+    response_date?: string;
+    denial_reason?: string;
+    Business: Business; // For frontend ease-of-use
+}
+
 // COMPONENTS PROPS
 
 export interface EditUserModalProps {
@@ -96,3 +122,24 @@ export interface ReviewModalProps {
     onClose: () => void;
     onDelete: (reviewId: number, reason: string) => void;
 }
+
+export interface RequestModalProps {
+    request: {
+        request_id: number;
+        Business: {
+            business_name: string;
+        };
+        request_date: string;
+        business_permit: string; // URL or path to the uploaded business permit
+    };
+    onClose: () => void;
+    onAction: (requestId: number, action: "APPROVED" | "DENIED", reason?: string) => Promise<void>;
+}
+
+export interface UserVerificationModalProps {
+    verification: UserVerification;
+    onClose: () => void;
+    onAction: (verificationId: number, status: "APPROVED" | "DENIED", reason?: string) => void;
+}
+
+

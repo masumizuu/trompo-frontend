@@ -1,16 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { FaFileCircleCheck } from 'react-icons/fa6';
-import { FaEdit, FaTrash, FaUserAlt } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaUserAlt, FaUserCheck } from 'react-icons/fa';
 import { IoStorefront } from 'react-icons/io5';
 import { TbMessageReportFilled } from 'react-icons/tb';
 import { MdRateReview } from 'react-icons/md';
 import { RiLogoutCircleLine } from "react-icons/ri";
-import { editUser, deleteUser, getAllUsers, getAllBusinesses, resolveDispute, getAllDisputes, deleteReview, getAllReviews} from "../../api";
+import { editUser, deleteUser, getAllUsers, getAllBusinesses, resolveDispute, getAllDisputes, deleteReview, getAllReviews, reviewUserVerification, reviewBusinessVerification, getUserVerifications, getBusinessVerifications } from "../../api";
 import EditUserModal from "./components/EditUserModal.tsx";
 import DisputeModal from "./components/DisputeModal.tsx";
-import { useNavigate } from "react-router-dom";
-import { User, Business, Dispute, Review } from "../../interfaces";
 import ReviewModal from "./components/ReviewModal.tsx";
+import RequestModal from "./components/RequestModal.tsx";
+import { useNavigate } from "react-router-dom";
+import { User, Business, Dispute, Review, UserVerification, VerificationRequest } from "../../interfaces";
+import UserVerificationModal from "./components/UserVerificationModal.tsx";
+
 
 const AdminDashboard: React.FC = () => {
     const navigate = useNavigate();
@@ -22,13 +25,22 @@ const AdminDashboard: React.FC = () => {
     const [isDispute, setIsDispute] = useState<boolean>(false);
     const [isReviews, setIsReviews] = useState<boolean>(false);
     const [isVerifications, setIsVerifications] = useState<boolean>(false);
+    const [isUserVerifications, setIsUserVerifications] = useState<boolean>(false);
 
     const [users, setUsers] = useState<User[]>([]);
+
     const [businesses, setBusinesses] = useState<Business[]>([]);
+
     const [disputes, setDisputes] = useState<Dispute[]>([]);
     const [selectedDispute, setSelectedDispute] = useState<Dispute | null>(null);
+
     const [reviews, setReviews] = useState<Review[]>([]);
     const [selectedReview, setSelectedReview] = useState<Review | null>(null);
+
+    const [userVerifications, setUserVerifications] = useState<UserVerification[]>([]);
+    const [selectedVerification, setSelectedVerification] = useState<UserVerification | null>(null);
+    const [businessVerifications, setBusinessVerifications] = useState<VerificationRequest[]>([]);
+    const [selectedRequest, setSelectedRequest] = useState<VerificationRequest | null>(null);
 
     // displays
     useEffect(() => {
@@ -36,7 +48,9 @@ const AdminDashboard: React.FC = () => {
         if (isBusi) fetchBusinesses();
         if (isDispute) fetchDisputes();
         if (isReviews) fetchReviews();
-    }, [isUsers, isBusi, isDispute, isReviews]);
+        if (isUserVerifications) fetchUserVerifications();
+        if (isVerifications) fetchBusinessVerifications();
+}, [isUsers, isBusi, isDispute, isReviews, isUserVerifications, isVerifications]);
 
     const fetchUsers = async () => {
         try {
@@ -64,12 +78,24 @@ const AdminDashboard: React.FC = () => {
             console.error('Failed to fetch reviews:', error);
         }
     };
+    const fetchUserVerifications = async () => {
+        try { setUserVerifications(await getUserVerifications()); } catch (error) {
+            console.error('Failed to fetch user verifications:', error);
+        }
+    };
+    const fetchBusinessVerifications = async () => {
+        try { setBusinessVerifications(await getBusinessVerifications()); } catch (error) {
+            console.error('Failed to fetch business verifications:', error);
+        }
+    };
+
     const toggleView = (view: string) => {
         setIsUsers(view === 'users');
         setIsBusi(view === 'businesses');
         setIsDispute(view === 'disputes');
         setIsReviews(view === 'reviews');
         setIsVerifications(view === 'verifications');
+        setIsUserVerifications(view === 'userVerifications');
     };
 
     // USERS
@@ -115,8 +141,6 @@ const AdminDashboard: React.FC = () => {
         }
     };
 
-    // REVIEWS
-
     return (
         <div className="h-full w-full flex overflow-hidden antialiased text-gray-800 bg-white min-h-screen">
             {/* Sidebar */}
@@ -130,6 +154,7 @@ const AdminDashboard: React.FC = () => {
                         <SidebarItem icon={<IoStorefront />} onClick={() => toggleView('businesses')} />
                         <SidebarItem icon={<TbMessageReportFilled />} onClick={() => toggleView('disputes')} />
                         <SidebarItem icon={<MdRateReview />} onClick={() => toggleView('reviews')} />
+                        <SidebarItem icon={<FaUserCheck />} onClick={() => toggleView('userVerifications')} />
                         <SidebarItem icon={<FaFileCircleCheck />} onClick={() => toggleView('verifications')} />
                         <SidebarItem icon={<RiLogoutCircleLine />} onClick={() => navigate('/')} />
                     </ul>
@@ -331,6 +356,100 @@ const AdminDashboard: React.FC = () => {
                                         await deleteReview(reviewId, adminId, reason);
                                         fetchReviews();
                                         setSelectedReview(null);
+                                    }}
+                                />
+                            )}
+                        </section>
+                    )}
+                    {isUserVerifications && (
+                        <section className="p-4 w-full">
+                            <h2 className="font-bold mb-4">User Verifications</h2>
+                            <table className="min-w-full bg-white border rounded-lg shadow">
+                                <thead className="bg-gray-200">
+                                <tr>
+                                    <th className="py-3 px-6">User</th>
+                                    <th className="py-3 px-6">Status</th>
+                                    <th className="py-3 px-6">Actions</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {userVerifications.map((verification) => (
+                                    <tr key={verification.verification_id} className="border-b hover:bg-gray-100 group">
+                                        <td className="py-3 px-6">
+                                            {verification.User?.first_name} {verification.User?.last_name}
+                                        </td>
+                                        <td className="py-3 px-6">{verification.status}</td>
+                                        <td className="py-3 px-6">
+                                            <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button
+                                                    className="text-blue-500 hover:text-blue-700"
+                                                    onClick={() => setSelectedVerification(verification)}
+                                                >
+                                                    View
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                                </tbody>
+                            </table>
+
+                            {selectedVerification && (
+                                <UserVerificationModal
+                                    verification={selectedVerification}
+                                    onClose={() => setSelectedVerification(null)}
+                                    onAction={async (verificationId: number, status: "APPROVED" | "DENIED", reason?: string) => {
+                                        await reviewUserVerification(verificationId, status, adminId, reason);
+                                        fetchUserVerifications();
+                                        setSelectedVerification(null);
+                                    }}
+                                />
+                            )}
+                        </section>
+                    )}
+                    {isVerifications && (
+                        <section className="p-4 w-full">
+                            <h2 className="font-bold mb-4 text-tr-0">Business Verification Requests</h2>
+                            <table className="min-w-full bg-white border rounded-lg shadow">
+                                <thead className="bg-gray-200">
+                                <tr>
+                                    <th className="py-3 px-6 text-left">Business Name</th>
+                                    <th className="py-3 px-6 text-left">Request Date</th>
+                                    <th className="py-3 px-6 text-left">Status</th>
+                                    <th className="py-3 px-6 text-left">Actions</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {businessVerifications.map((request) => (
+                                    <tr key={request.request_id} className="border-b hover:bg-gray-100 group">
+                                        <td className="py-3 px-6 text-left">{request.Business.business_name}</td>
+                                        <td className="py-3 px-6 text-left">{new Date(request.request_date).toLocaleDateString()}</td>
+                                        <td className="py-3 px-6 text-left">{request.status}</td>
+                                        <td className="py-3 px-6 text-left">
+                                            <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button
+                                                    className="text-tr-0 hover:border-tr-0 mr-2"
+                                                    onClick={() => setSelectedRequest(request)}
+                                                >
+                                                    View
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                                </tbody>
+                            </table>
+
+                            {/* IN THE MODAL, FIX APPROVE DENY STATUS PASSING */}
+
+                            {selectedRequest && (
+                                <RequestModal
+                                    request={selectedRequest}
+                                    onClose={() => setSelectedRequest(null)}
+                                    onAction={async (requestId: number, action: "APPROVED" | "DENIED", reason?: string) => {
+                                        await reviewBusinessVerification(requestId, action, adminId, reason || "");
+                                        fetchBusinessVerifications();
+                                        setSelectedRequest(null);
                                     }}
                                 />
                             )}

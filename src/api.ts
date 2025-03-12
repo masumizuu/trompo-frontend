@@ -93,6 +93,60 @@ export const deleteUser = async (user_id: number) => {
 };
 
 /////////////////////////////////////////////////////////
+// USER VERIFICATION CALLS
+/////////////////////////////////////////////////////////
+
+// ✅ User Submits ID for Verification
+export const submitUserVerification = async (formData: FormData) => {
+    const response = await fetch(`${API_BASE_URL}/users/verify`, {
+        method: "POST",
+        body: formData,
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to submit user verification.");
+    }
+
+    return await response.json();
+};
+
+// ✅ Admin Fetches All Pending User Verifications
+export const getUserVerifications = async () => {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${API_BASE_URL}/users/verifications`, {
+        method: "GET",
+        headers: { "Authorization": `Bearer ${token}` }
+    });
+
+    if (!response.ok) {
+        throw new Error("Failed to fetch user verifications.");
+    }
+
+    return await response.json();
+};
+
+// ✅ Admin Approves or Denies User Verification
+export const reviewUserVerification = async (verificationId: number, status: "APPROVED" | "DENIED", adminId: number, denialReason?: string) => {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${API_BASE_URL}/users/verifications/${verificationId}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({ status, admin_id: adminId, denial_reason: denialReason }),
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to review user verification.");
+    }
+
+    return await response.json();
+};
+
+/////////////////////////////////////////////////////////
 // BUSINESS CALLS
 /////////////////////////////////////////////////////////
 
@@ -170,6 +224,60 @@ export const deleteBusiness = async (business_id: number, user_id: number) => {
 
     if (!response.ok) {
         throw new Error("Failed to delete business.");
+    }
+
+    return await response.json();
+};
+
+// ✅ Business Owner Submits Business Verification Request
+export const submitBusinessVerification = async (formData: FormData) => {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${API_BASE_URL}/businesses/verify`, {
+        method: "POST",
+        headers: {
+            "Authorization": `Bearer ${token}`,
+        },
+        body: formData,
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to submit business verification.");
+    }
+
+    return await response.json();
+};
+
+// ✅ Admin Fetches All Pending Business Verifications
+export const getBusinessVerifications = async () => {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${API_BASE_URL}/businesses/verifications/all`, {
+        method: "GET",
+        headers: { "Authorization": `Bearer ${token}` }
+    });
+
+    if (!response.ok) {
+        throw new Error("Failed to fetch business verifications.");
+    }
+
+    return await response.json();
+};
+
+// ✅ Admin Approves or Denies Business Verification
+export const reviewBusinessVerification = async (verificationId: number, status: "APPROVED" | "DENIED", adminId: number, denialReason?: string) => {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${API_BASE_URL}/businesses/verifications/${verificationId}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({ status, admin_id: adminId, denial_reason: denialReason }),
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to review business verification.");
     }
 
     return await response.json();
