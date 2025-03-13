@@ -1,14 +1,19 @@
 import { useEffect, useState } from "react";
 import Chart from "react-apexcharts";
-import { getBusinessByOwner } from "../../api";
+import { getBusinessByOwner, deleteBusiness, deleteSellable } from "../../api";
 import { CiLogout } from "react-icons/ci";
 import { useNavigate } from "react-router-dom";
-import { Business, Category, Location, Sellable } from "../../interfaces.ts";
+import { Business, Sellable } from "../../interfaces.ts";
+import EditSellableModal from "./EditSellableModal";
+import EditBusinessModal from "./EditBusinessModal";
 
 function BusinessOwnerDashboard() {
     const [business, setBusiness] = useState<Business | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [selectedSellable, setSelectedSellable] = useState<Sellable | null>(null);
+    const [isEditModalOpen, setEditModalOpen] = useState(false);
+    const [isEditBusinessModalOpen, setEditBusinessModalOpen] = useState(false);
     const navigate = useNavigate();
 
     const user_id = localStorage.getItem("user_id") || "";
@@ -28,9 +33,6 @@ function BusinessOwnerDashboard() {
 
         fetchBusiness();
     }, [user_id]);
-
-    if (loading) return <p className="text-white p-4">Loading...</p>;
-    if (error) return <p className="text-red-500 p-4">{error}</p>;
 
     const lineChartOptions = {
         series: [
@@ -54,6 +56,45 @@ function BusinessOwnerDashboard() {
         labels: ["Apples", "Oranges", "Bananas", "Berries"],
     };
 
+    const handleEditBusiness = () => {
+        setEditBusinessModalOpen(true);
+    };
+
+    const handleDeleteBusiness = async () => {
+        if (window.confirm("Are you sure you want to delete your business? This action cannot be undone.")) {
+            try {
+                await deleteBusiness(business!.business_id, Number(user_id));
+                alert("Business deleted successfully!");
+                navigate("/");
+            } catch (err: any) {
+                alert("Error deleting business: " + err.message);
+            }
+        }
+    };
+
+    const handleEditSellable = (sellable: Sellable) => {
+        setSelectedSellable(sellable);
+        setEditModalOpen(true);
+    };
+
+    const handleDeleteSellable = async (sellable_id: number) => {
+        if (window.confirm("Are you sure you want to delete this sellable?")) {
+            try {
+                await deleteSellable(sellable_id);
+                setBusiness({
+                    ...business!,
+                    sellables: business?.sellables.filter(s => s.sellable_id !== sellable_id) || []
+                });
+                alert("Sellable deleted successfully!");
+            } catch (err: any) {
+                alert("Error deleting sellable: " + err.message);
+            }
+        }
+    };
+
+    if (loading) return <p className="text-white p-4">Loading...</p>;
+    if (error) return <p className="text-red-500 p-4">{error}</p>;
+
     return (
         <div className="flex h-screen bg-gray-100">
             <aside className="z-20 flex-shrink-0 hidden w-60 pl-2 overflow-y-auto md:block bg-tr-0">
@@ -71,12 +112,8 @@ function BusinessOwnerDashboard() {
                         </div>
                     </div>
                     <div className="flex flex-row p-4 gap-2 text-gray-100 cursor-pointer hover:underline" onClick={() => navigate("/")}>
-                        <span>
-                            <CiLogout className="h-7 w-7 font-bold" />
-                        </span>
-                        <span>
-                            Log Out
-                        </span>
+                        <span><CiLogout className="h-7 w-7 font-bold" /></span>
+                        <span>Log Out</span>
                     </div>
                 </div>
             </aside>
@@ -90,8 +127,17 @@ function BusinessOwnerDashboard() {
 
                 <main className="p-6 bg-gray-100 min-h-screen text-gray-800">
                     <div className="bg-white rounded-lg shadow-lg p-6">
-                        <h3 className="text-2xl font-semibold text-gray-800">{business?.business_name}</h3>
-                        <p className="text-gray-600 mt-2">{business?.description}</p>
+                        <div className="flex justify-between items-center">
+                            <div>
+                                <h3 className="text-2xl font-semibold text-gray-800">{business?.business_name}</h3>
+                                <p className="text-gray-600 mt-2">{business?.description}</p>
+                            </div>
+                            <div>
+                                <button onClick={handleEditBusiness}
+                                        className="bg-blue-500 text-white px-4 py-2 rounded mr-2">Edit</button>
+                                <button onClick={handleDeleteBusiness} className="bg-red-500 text-white px-4 py-2 rounded">Delete</button>
+                            </div>
+                        </div>
                         <p>Category: {business?.Category?.category_name}</p>
 
                         <div className="grid grid-cols-2 gap-4">
@@ -122,16 +168,19 @@ function BusinessOwnerDashboard() {
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                             </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
                             {business?.sellables.map(sellable => (
-                                <tr key={sellable.sellable_id}>
+                                <tr key={sellable.sellable_id} className="hover:bg-gray-100 group">
                                     <td className="px-6 py-4 whitespace-nowrap">{sellable.name}</td>
                                     <td className="px-6 py-4 whitespace-nowrap">{sellable.type}</td>
                                     <td className="px-6 py-4 whitespace-nowrap">₱{sellable.price}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap">{sellable.is_active ? "Active" : "Inactive"}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button onClick={() => handleEditSellable(sellable)} className="bg-yellow-500 text-white px-3 py-1 rounded">Edit</button>
+                                        <button onClick={() => handleDeleteSellable(sellable.sellable_id)} className="bg-red-500 text-white px-3 py-1 rounded">Delete</button>
+                                    </td>
                                 </tr>
                             ))}
                             </tbody>
@@ -139,6 +188,41 @@ function BusinessOwnerDashboard() {
                     </div>
                 </main>
             </div>
+
+            {isEditModalOpen && selectedSellable && (
+                <EditSellableModal
+                    sellable={selectedSellable}
+                    onClose={() => setEditModalOpen(false)}
+                    onUpdate={(updatedSellable: Sellable) => {
+                        setBusiness((prevBusiness) => {
+                            if (!prevBusiness) return null;
+
+                            // ✅ Create a **new array** so React detects changes
+                            const updatedSellables = prevBusiness.sellables.map((s) =>
+                                s.sellable_id === updatedSellable.sellable_id ? { ...s, ...updatedSellable } : s
+                            );
+
+                            return { ...prevBusiness, sellables: updatedSellables };
+                        });
+                    }}
+                />
+            )}
+
+            {isEditBusinessModalOpen && business && (
+                <EditBusinessModal
+                    business={business}
+                    user_id={user_id}
+                    onClose={() => setEditBusinessModalOpen(false)}
+                    onUpdate={(updatedBusiness: Business) =>
+                        setBusiness(prevBusiness => ({
+                            ...prevBusiness!,
+                            ...updatedBusiness,
+                            sellables: updatedBusiness.sellables || prevBusiness?.sellables || [] // Ensure sellables is always defined
+                        }))
+                    }
+                />
+            )}
+
         </div>
     );
 }

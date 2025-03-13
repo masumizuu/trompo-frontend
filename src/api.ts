@@ -283,6 +283,47 @@ export const reviewBusinessVerification = async (verificationId: number, status:
     return await response.json();
 };
 
+// ✅ Add a new sellable (product/service)
+export const addSellable = async (business_id: number, sellableData: any) => {
+    const response = await fetch(`${API_BASE_URL}/sellables`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ business_id, ...sellableData }),
+    });
+    if (!response.ok) throw new Error("Failed to add sellable.");
+    return response.json();
+};
+
+export const editSellable = async (sellable_id: number, user_id: string, updatedData: any) => {
+    const token = localStorage.getItem("token"); // ✅ Retrieve token from localStorage
+
+    const response = await fetch(`http://localhost:5300/api/businesses/sellable/${sellable_id}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}` // ✅ Send token
+        },
+        body: JSON.stringify({ user_id, ...updatedData }),
+    });
+
+    if (!response.ok) {
+        const errorResponse = await response.json();
+        throw new Error(errorResponse.message || "Failed to edit sellable.");
+    }
+
+    return response.json();
+};
+
+
+// ✅ Delete a sellable
+export const deleteSellable = async (sellable_id: number) => {
+    const response = await fetch(`${API_BASE_URL}/businesses/sellable/${sellable_id}`, {
+        method: "DELETE",
+    });
+    if (!response.ok) throw new Error("Failed to delete sellable.");
+    return response.json();
+};
+
 /////////////////////////////////////////////////////////
 // DISPUTE CALLS
 /////////////////////////////////////////////////////////

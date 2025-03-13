@@ -137,4 +137,10 @@ export interface UserVerificationModalProps {
     onAction: (verificationId: number, status: "APPROVED" | "DENIED", reason?: string) => void;
 }
 
+export interface EditSellableModalProps {
+    sellable: Sellable;
+    onClose: () => void;
+    onUpdate: (updatedSellable: Sellable) => void;
+}
+
 
