@@ -1,15 +1,32 @@
 import React, { useState } from "react";
 import { UserVerificationModalProps } from "../../../interfaces";
+import CustomAlert from "../../components/CustomAlert";
 
 const UserVerificationModal: React.FC<UserVerificationModalProps> = ({ verification, onClose, onAction }) => {
     const [denialReason, setDenialReason] = useState("");
 
+    const [alert, setAlert] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null);
+
+    const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
     const handleAction = (action: "APPROVED" | "DENIED") => {
         if (action === "DENIED" && !denialReason.trim()) {
-            alert("Please provide a reason before denying the request.");
+            setAlert({
+                title: "Missing Reason",
+                message: "Please provide a reason before denying the request.",
+                onConfirm: () => setAlert(null),
+            });
             return;
         }
-        onAction(verification.verification_id, action, denialReason);
+
+        setAlert({
+            title: `Confirm ${action === "APPROVED" ? "Approval" : "Denial"}`,
+            message: `Are you sure you want to ${action.toLowerCase()} this verification request? This action cannot be undone.`,
+            onConfirm: () => {
+                onAction(verification.verification_id, action, denialReason);
+                setAlert(null);
+            },
+        });
     };
 
     return (
@@ -31,7 +48,8 @@ const UserVerificationModal: React.FC<UserVerificationModalProps> = ({ verificat
                         <img
                             src={verification.id_image}
                             alt="User ID"
-                            className="border rounded w-full h-40 object-cover"
+                            className="border rounded w-full h-full object-cover cursor-pointer"
+                            onClick={() => setSelectedImage(verification.id_image)}
                         />
                     </div>
 
@@ -94,6 +112,40 @@ const UserVerificationModal: React.FC<UserVerificationModalProps> = ({ verificat
                     </button>
                 </div>
             </div>
+
+            {selectedImage && (
+                <div
+                    className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-75 z-50"
+                    onClick={() => setSelectedImage(null)} // Close on background click
+                >
+                    <div className="relative p-4">
+                        {/* Close Button */}
+                        <button
+                            className="absolute top-2 -right-8 text-white text-2xl font-bold bg-black bg-opacity-50 px-2 rounded-full"
+                            onClick={() => setSelectedImage(null)}
+                        >
+                            ✕
+                        </button>
+
+                        {/* Full-Size Image */}
+                        <img
+                            src={selectedImage}
+                            alt="Full Business Permit"
+                            className="max-w-full max-h-[90vh] object-contain rounded-lg"
+                        />
+                    </div>
+                </div>
+            )}
+
+            {alert && (
+                <CustomAlert
+                    title={alert.title}
+                    message={alert.message}
+                    onConfirm={alert.onConfirm}
+                    onCancel={() => setAlert(null)}
+                />
+            )}
+
         </div>
     );
 };

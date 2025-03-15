@@ -47,6 +47,26 @@ export const getAllUsers = async () => {
     return await response.json();
 };
 
+// ✅ Fetch User by ID
+export const getUserById = async (user_id: number) => {
+    const token = localStorage.getItem("token");
+
+    const response = await fetch(`${API_BASE_URL}/auth/${user_id}`, {
+        method: "GET",
+        headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+        }
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to fetch user data.");
+    }
+
+    return await response.json();
+};
+
 // ✅ Edit User
 export const editUser = async (user_id: number, userData: Partial<{
     first_name: string;
@@ -313,7 +333,6 @@ export const editSellable = async (sellable_id: number, user_id: string, updated
 
     return response.json();
 };
-
 
 // ✅ Delete a sellable
 export const deleteSellable = async (sellable_id: number) => {

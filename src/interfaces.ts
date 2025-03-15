@@ -7,6 +7,7 @@ export interface User {
     user_type: string;
     is_verified: boolean;
     date_registered: string;
+    profile_picture: string;
 }
 
 export interface Location {
@@ -44,6 +45,8 @@ export interface Business {
     sellables: Sellable[];
     user_id: number;
     date_registered: string;
+    logo: string;
+    banner: string;
 }
 
 export interface Dispute {

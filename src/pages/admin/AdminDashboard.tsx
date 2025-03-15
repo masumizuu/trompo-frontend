@@ -13,12 +13,16 @@ import RequestModal from "./components/RequestModal.tsx";
 import { useNavigate } from "react-router-dom";
 import { User, Business, Dispute, Review, UserVerification, VerificationRequest } from "../../interfaces";
 import UserVerificationModal from "./components/UserVerificationModal.tsx";
+import CustomAlert from "../components/CustomAlert";
+
 
 
 const AdminDashboard: React.FC = () => {
     const navigate = useNavigate();
     const id = localStorage.getItem("user_id");
     const adminId = Number(id);
+
+    const [alert, setAlert] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null);
 
     const [isUsers, setIsUsers] = useState<boolean>(true); // default
     const [isBusi, setIsBusi] = useState<boolean>(false);
@@ -111,20 +115,37 @@ const AdminDashboard: React.FC = () => {
     };
     const handleDeleteUser = async (userId: number, userType: string) => {
         if (userType === 'BUSINESS_OWNER') {
-            alert('Cannot delete a business owner directly. Delete the business first.');
+            setAlert({
+                title: "Action Not Allowed",
+                message: "Cannot delete a business owner directly. Delete the business first.",
+                onConfirm: () => setAlert(null),
+            });
             return;
         }
 
-        if (confirm('Are you sure you want to delete this user?')) {
-            try {
-                await deleteUser(userId);
-                alert('User deleted successfully.');
-                fetchUsers(); // Refresh the user list after deletion
-            } catch (error) {
-                console.error('Failed to delete user:', error);
-                alert(error.message || 'Failed to delete user.');
-            }
-        }
+        setAlert({
+            title: "Delete User",
+            message: "Are you sure you want to delete this user? This action cannot be undone.",
+            onConfirm: async () => {
+                try {
+                    await deleteUser(userId);
+                    setAlert({
+                        title: "Success",
+                        message: "User deleted successfully.",
+                        onConfirm: () => {
+                            setAlert(null);
+                            fetchUsers(); // Refresh the list
+                        },
+                    });
+                } catch (error: any) {
+                    setAlert({
+                        title: "Error",
+                        message: error.message || "Failed to delete user.",
+                        onConfirm: () => setAlert(null),
+                    });
+                }
+            },
+        });
     };
 
     // BUSINESSES
@@ -453,6 +474,16 @@ const AdminDashboard: React.FC = () => {
                     )}
                 </main>
             </div>
+
+            {alert && (
+                <CustomAlert
+                    title={alert.title}
+                    message={alert.message}
+                    onConfirm={alert.onConfirm}
+                    onCancel={() => setAlert(null)}
+                />
+            )}
+
         </div>
     );
 };

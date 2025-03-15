@@ -1,15 +1,30 @@
 import React, { useState } from 'react';
 import { ReviewModalProps } from "../../../interfaces";
+import CustomAlert from "../../components/CustomAlert";
 
 const ReviewModal: React.FC<ReviewModalProps> = ({ review, onClose, onDelete }) => {
     const [deleteReason, setDeleteReason] = useState("");
 
+    const [alert, setAlert] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null);
+
     const handleDelete = () => {
         if (!deleteReason.trim()) {
-            alert("Please provide a reason before deleting the review.");
+            setAlert({
+                title: "Missing Reason",
+                message: "Please provide a reason before deleting the review.",
+                onConfirm: () => setAlert(null),
+            });
             return;
         }
-        onDelete(review.review_id, deleteReason);
+
+        setAlert({
+            title: "Confirm Deletion",
+            message: "Are you sure you want to delete this review? This action cannot be undone.",
+            onConfirm: () => {
+                onDelete(review.review_id, deleteReason);
+                setAlert(null);
+            },
+        });
     };
 
     return (
@@ -68,6 +83,16 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ review, onClose, onDelete }) 
                     </button>
                 </div>
             </div>
+
+            {alert && (
+                <CustomAlert
+                    title={alert.title}
+                    message={alert.message}
+                    onConfirm={alert.onConfirm}
+                    onCancel={() => setAlert(null)}
+                />
+            )}
+
         </div>
     );
 };

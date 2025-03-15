@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import Chart from "react-apexcharts";
-import { getBusinessByOwner, deleteBusiness, deleteSellable } from "../../api";
+import { getBusinessByOwner, deleteBusiness, deleteSellable, getUserById } from "../../api";
 import { CiLogout } from "react-icons/ci";
 import { useNavigate } from "react-router-dom";
 import { Business, Sellable } from "../../interfaces.ts";
 import EditSellableModal from "./EditSellableModal";
 import EditBusinessModal from "./EditBusinessModal";
+import CustomAlert from "../components/CustomAlert.tsx";
 
 function BusinessOwnerDashboard() {
     const [business, setBusiness] = useState<Business | null>(null);
@@ -16,8 +17,26 @@ function BusinessOwnerDashboard() {
     const [isEditBusinessModalOpen, setEditBusinessModalOpen] = useState(false);
     const navigate = useNavigate();
 
+    const [alert, setAlert] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null);
+
+    const [profilePhoto, setProfilePhoto] = useState<string>("/pfp/default-photo.jpg");
+    const [userName, setUserName] = useState<string>("Owner Name");
     const user_id = localStorage.getItem("user_id") || "";
-    const profile_photo = localStorage.getItem("profile_picture") || "/default-photo.jpg";
+
+    useEffect(() => {
+        const fetchUserProfile = async () => {
+            try {
+                const userData = await getUserById(Number(user_id));
+                setProfilePhoto(userData.profile_picture || "/pfp/default-photo.jpg");
+                setUserName(userData.first_name + " " + userData.last_name || "Owner Name");
+                console.log(userData.profile_picture);
+            } catch (error) {
+                console.error("Error fetching profile photo:", error);
+            }
+        };
+
+        fetchUserProfile();
+    }, [user_id]);
 
     useEffect(() => {
         const fetchBusiness = async () => {
@@ -61,15 +80,25 @@ function BusinessOwnerDashboard() {
     };
 
     const handleDeleteBusiness = async () => {
-        if (window.confirm("Are you sure you want to delete your business? This action cannot be undone.")) {
-            try {
-                await deleteBusiness(business!.business_id, Number(user_id));
-                alert("Business deleted successfully!");
-                navigate("/");
-            } catch (err: any) {
-                alert("Error deleting business: " + err.message);
-            }
-        }
+        setAlert({
+            title: "Delete Business",
+            message: "Are you sure you want to delete your business? This action cannot be undone.",
+            onConfirm: async () => {
+                try {
+                    await deleteBusiness(business?.business_id || 0, Number(user_id));
+                    setBusiness(null); // ✅ Reset business state to null after deletion
+
+                    alert("Business deleted successfully!"); // ✅ Call alert BEFORE clearing state
+
+                    setAlert(null); // ✅ Clear alert after user sees the message
+
+                    navigate("/");
+                } catch (err: any) {
+                    alert("Error deleting business: " + err.message); // ✅ Ensure alert is executed first
+                    setAlert(null); // ✅ Clear alert only after showing the message
+                }
+            },
+        });
     };
 
     const handleEditSellable = (sellable: Sellable) => {
@@ -78,18 +107,31 @@ function BusinessOwnerDashboard() {
     };
 
     const handleDeleteSellable = async (sellable_id: number) => {
-        if (window.confirm("Are you sure you want to delete this sellable?")) {
-            try {
-                await deleteSellable(sellable_id);
-                setBusiness({
-                    ...business!,
-                    sellables: business?.sellables.filter(s => s.sellable_id !== sellable_id) || []
-                });
-                alert("Sellable deleted successfully!");
-            } catch (err: any) {
-                alert("Error deleting sellable: " + err.message);
-            }
-        }
+        setAlert({
+            title: "Delete Sellable",
+            message: "Are you sure you want to delete this sellable?",
+            onConfirm: async () => {
+                try {
+                    await deleteSellable(sellable_id);
+
+                    // ✅ Ensure business is NOT null before updating state
+                    setBusiness((prevBusiness) => {
+                        if (!prevBusiness) return prevBusiness; // If null, do nothing
+
+                        return {
+                            ...prevBusiness,
+                            sellables: prevBusiness.sellables?.filter(s => s.sellable_id !== sellable_id) || []
+                        };
+                    });
+
+                    setAlert(null); // Close alert
+                    alert("Sellable deleted successfully!");
+                } catch (err: any) {
+                    setAlert(null);
+                    alert("Error deleting sellable: " + err.message);
+                }
+            },
+        });
     };
 
     if (loading) return <p className="text-white p-4">Loading...</p>;
@@ -107,8 +149,9 @@ function BusinessOwnerDashboard() {
                     </div>
                     <div className="flex justify-center">
                         <div>
-                            <img className="h-24 w-24 rounded-full object-cover border-4 border-green-400" src={profile_photo} alt="Profile" />
-                            <p className="text-base text-gray-100 pt-2 text-center w-24">Business Owner</p>
+                            <img className="h-24 w-24 rounded-full object-cover border-4 border-green-400" src={profilePhoto} alt="Profile" />
+                            <p className="text-base text-gray-100 pt-2 text-center">{userName}</p>
+                            <p className="uppercase text-xs text-gray-100 pt-2 text-center">Business Owner</p>
                         </div>
                     </div>
                     <div className="flex flex-row p-4 gap-2 text-gray-100 cursor-pointer hover:underline" onClick={() => navigate("/")}>
@@ -127,10 +170,32 @@ function BusinessOwnerDashboard() {
 
                 <main className="p-6 bg-gray-100 min-h-screen text-gray-800">
                     <div className="bg-white rounded-lg shadow-lg p-6">
-                        <div className="flex justify-between items-center">
-                            <div>
-                                <h3 className="text-2xl font-semibold text-gray-800">{business?.business_name}</h3>
-                                <p className="text-gray-600 mt-2">{business?.description}</p>
+
+                        {/* ✅ Business Banner at the Top */}
+                        {business?.banner && (
+                            <img
+                                src={business.banner}
+                                alt="Business Banner"
+                                className="w-full max-w-[1200px] sm:h-[250px] md:h-[300px] lg:h-[350px] xl:h-[400px] object-contain rounded-lg mx-auto"
+                            />
+                        )}
+
+                        <div className="flex justify-between items-center my-2">
+                            <div className="flex items-center">
+
+                                {/* ✅ Business Logo beside the Business Name */}
+                                {business?.logo && (
+                                    <img
+                                        src={business.logo}
+                                        alt="Business Logo"
+                                        className="h-16 w-16 object-cover rounded-full mr-4"
+                                    />
+                                )}
+
+                                <div>
+                                    <h3 className="text-2xl font-semibold text-gray-800">{business?.business_name}</h3>
+                                    <p className="text-gray-600 mt-2">{business?.description}</p>
+                                </div>
                             </div>
                             <div>
                                 <button onClick={handleEditBusiness}
@@ -165,6 +230,7 @@ function BusinessOwnerDashboard() {
                         <table className="min-w-full divide-y divide-gray-200 mt-2">
                             <thead>
                             <tr>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Image</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
@@ -174,9 +240,22 @@ function BusinessOwnerDashboard() {
                             <tbody className="bg-white divide-y divide-gray-200">
                             {business?.sellables.map(sellable => (
                                 <tr key={sellable.sellable_id} className="hover:bg-gray-100 group">
+
+                                    {/* ✅ Sellable Image */}
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <img
+                                            src={sellable.media.length > 0 ? sellable.media[0] : "/default-placeholder.png"}
+                                            alt={sellable.name}
+                                            className="h-16 w-16 object-cover rounded-md border border-gray-300"
+                                        />
+                                    </td>
+
+                                    {/* ✅ Sellable Details */}
                                     <td className="px-6 py-4 whitespace-nowrap">{sellable.name}</td>
                                     <td className="px-6 py-4 whitespace-nowrap">{sellable.type}</td>
                                     <td className="px-6 py-4 whitespace-nowrap">₱{sellable.price}</td>
+
+                                    {/* ✅ Actions */}
                                     <td className="px-6 py-4 whitespace-nowrap flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                         <button onClick={() => handleEditSellable(sellable)} className="bg-yellow-500 text-white px-3 py-1 rounded">Edit</button>
                                         <button onClick={() => handleDeleteSellable(sellable.sellable_id)} className="bg-red-500 text-white px-3 py-1 rounded">Delete</button>
@@ -223,7 +302,17 @@ function BusinessOwnerDashboard() {
                 />
             )}
 
+            {alert && (
+                <CustomAlert
+                    title={alert.title}
+                    message={alert.message}
+                    onConfirm={alert.onConfirm}
+                    onCancel={() => setAlert(null)}
+                />
+            )}
+
         </div>
+
     );
 }
 
