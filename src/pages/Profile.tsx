@@ -46,6 +46,10 @@ const Profile: React.FC = () => {
         setIsModalOpen(false);
     };
 
+    const closeIdModal = () => {
+        setIsIdModalOpen(false);
+    };
+
     const handleSave = (updatedUser: User) => {
         setUser(updatedUser); // Update the user state with the updated user data
         setIsModalOpen(false); // Close the modal after saving
@@ -168,7 +172,7 @@ const Profile: React.FC = () => {
             )}
 
             {isIdModalOpen && (
-                <SubmitIdModal />
+                <SubmitIdModal isOpen={isIdModalOpen} onClose={closeIdModal} />
             )}
         </main>
     );

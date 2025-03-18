@@ -1,12 +1,12 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Chart from "react-apexcharts";
 import { getBusinessByOwner, deleteBusiness, deleteSellable, getUserById } from "../../api";
-import { CiLogout } from "react-icons/ci";
 import { useNavigate } from "react-router-dom";
 import { Business, Sellable } from "../../interfaces.ts";
 import EditSellableModal from "./EditSellableModal";
 import EditBusinessModal from "./EditBusinessModal";
 import CustomAlert from "../components/CustomAlert.tsx";
+import SubmitVerificationModal from "./SubmitVerificationModal.tsx";
 
 function BusinessOwnerDashboard() {
     const [business, setBusiness] = useState<Business | null>(null);
@@ -16,33 +16,16 @@ function BusinessOwnerDashboard() {
     const [isEditModalOpen, setEditModalOpen] = useState(false);
     const [isEditBusinessModalOpen, setEditBusinessModalOpen] = useState(false);
     const navigate = useNavigate();
+    const [isVerified, setIsVerified] = useState(true); // default
 
     const [alert, setAlert] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null);
 
-    const handleLogout = () => {
-        setAlert({
-            title: "Logout",
-            message: "Are you sure you want to log out?",
-            onConfirm: () => {
-                localStorage.clear();
-                setTimeout(() => {
-                    navigate("/");
-                    setAlert(null);
-                }, 1000); // ✅ Adds delay before navigating
-            },
-        });
-    };
-
-    const [profilePhoto, setProfilePhoto] = useState<string>("/pfp/default-photo.jpg");
-    const [userName, setUserName] = useState<string>("Owner Name");
     const user_id = localStorage.getItem("user_id") || "";
 
     useEffect(() => {
         const fetchUserProfile = async () => {
             try {
                 const userData = await getUserById(Number(user_id));
-                setProfilePhoto(userData.profile_picture || "/pfp/default-photo.jpg");
-                setUserName(userData.first_name + " " + userData.last_name || "Owner Name");
                 console.log(userData.profile_picture);
             } catch (error) {
                 console.error("Error fetching profile photo:", error);
@@ -57,6 +40,13 @@ function BusinessOwnerDashboard() {
             try {
                 const data = await getBusinessByOwner(user_id);
                 setBusiness(data);
+
+                if (data?.is_verified === false) {
+                    setIsVerified(false);
+                } else {
+                    setIsVerified(true);
+                }
+
             } catch (err: any) {
                 setError(err.message);
             } finally {
@@ -66,6 +56,12 @@ function BusinessOwnerDashboard() {
 
         fetchBusiness();
     }, [user_id]);
+
+    const [isModalOpen, setIsModalOpen] = useState(false); // state to control modal
+
+    const handleVerificationModalClose = () => {
+        setIsModalOpen(false);
+    };
 
     const lineChartOptions = {
         series: [
@@ -154,112 +150,130 @@ function BusinessOwnerDashboard() {
     return (
         <div className="flex h-screen bg-gray-100 pt-20">
 
-            <div className="flex flex-col flex-1 w-full mb-4 overflow-y-auto">
-                <header className="z-1 py-4 bg-tr-0">
-                    <div className="flex items-center justify-between h-8 px-6 mx-auto">
-                        <h2 className="text-white text-lg font-semibold">Business Dashboard</h2>
-                    </div>
-                </header>
+            {isVerified && (
+                <div className="flex flex-col flex-1 w-full mb-4 overflow-y-auto">
+                    <header className="z-1 py-4 bg-tr-0">
+                        <div className="flex items-center justify-between h-8 px-6 mx-auto">
+                            <h2 className="text-white text-lg font-semibold">Business Dashboard</h2>
+                        </div>
+                    </header>
 
-                <main className="p-6 bg-gray-100 min-h-screen text-gray-800">
-                    <div className="bg-white rounded-lg shadow-lg p-6">
+                    <main className="p-6 bg-gray-100 min-h-screen text-gray-800">
+                        <div className="bg-white rounded-lg shadow-lg p-6">
 
-                        {/* ✅ Business Banner at the Top */}
-                        {business?.banner && (
-                            <img
-                                src={business.banner}
-                                alt="Business Banner"
-                                className="w-full max-w-[1200px] sm:h-[250px] md:h-[300px] lg:h-[350px] xl:h-[400px] object-contain rounded-lg mx-auto"
-                            />
-                        )}
+                            {/* ✅ Business Banner at the Top */}
+                            {business?.banner && (
+                                <img
+                                    src={business.banner}
+                                    alt="Business Banner"
+                                    className="w-full max-w-[1200px] sm:h-[250px] md:h-[300px] lg:h-[350px] xl:h-[400px] object-contain rounded-lg mx-auto"
+                                />
+                            )}
 
-                        <div className="flex justify-between items-center my-2">
-                            <div className="flex items-center">
+                            <div className="flex justify-between items-center my-2">
+                                <div className="flex items-center">
 
-                                {/* ✅ Business Logo beside the Business Name */}
-                                {business?.logo && (
-                                    <img
-                                        src={business.logo}
-                                        alt="Business Logo"
-                                        className="h-16 w-16 object-cover rounded-full mr-4"
-                                    />
-                                )}
+                                    {/* ✅ Business Logo beside the Business Name */}
+                                    {business?.logo && (
+                                        <img
+                                            src={business.logo}
+                                            alt="Business Logo"
+                                            className="h-16 w-16 object-cover rounded-full mr-4"
+                                        />
+                                    )}
 
+                                    <div>
+                                        <h3 className="text-2xl font-semibold text-gray-800">{business?.business_name}</h3>
+                                        <p className="text-gray-600 mt-2">{business?.description}</p>
+                                    </div>
+                                </div>
                                 <div>
-                                    <h3 className="text-2xl font-semibold text-gray-800">{business?.business_name}</h3>
-                                    <p className="text-gray-600 mt-2">{business?.description}</p>
+                                    <button onClick={handleEditBusiness}
+                                            className="bg-blue-500 text-white px-4 py-2 rounded mr-2">Edit</button>
+                                    <button onClick={handleDeleteBusiness} className="bg-red-500 text-white px-4 py-2 rounded">Delete</button>
                                 </div>
                             </div>
-                            <div>
-                                <button onClick={handleEditBusiness}
-                                        className="bg-blue-500 text-white px-4 py-2 rounded mr-2">Edit</button>
-                                <button onClick={handleDeleteBusiness} className="bg-red-500 text-white px-4 py-2 rounded">Delete</button>
+                            <p>Category: {business?.Category?.category_name}</p>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="flex flex-col">
+                                    <h6 className="text-gray-800 font-bold"> Shop Analytics </h6>
+                                    <Chart options={lineChartOptions} series={lineChartOptions.series} type="line" height={350} />
+                                </div>
+
+                                <div className="flex flex-col">
+                                    <h6 className="text-gray-800 font-bold"> Products Sold / Services Availed </h6>
+                                    <Chart options={pieChartOptions} series={pieChartOptions.series} type="radialBar" height={350} />
+                                </div>
                             </div>
-                        </div>
-                        <p>Category: {business?.Category?.category_name}</p>
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="flex flex-col">
-                                <h6 className="text-gray-800 font-bold"> Shop Analytics </h6>
-                                <Chart options={lineChartOptions} series={lineChartOptions.series} type="line" height={350} />
-                            </div>
+                            <h4 className="text-xl font-semibold mt-6">Locations</h4>
+                            <ul className="mt-2 space-y-2">
+                                {business?.Locations.map(location => (
+                                    <li key={location.location_id} className="bg-gray-200 p-2 rounded">
+                                        {business?.address}, {location.city}, {location.province} - {location.postal_code}
+                                    </li>
+                                ))}
+                            </ul>
 
-                            <div className="flex flex-col">
-                                <h6 className="text-gray-800 font-bold"> Products Sold / Services Availed </h6>
-                                <Chart options={pieChartOptions} series={pieChartOptions.series} type="radialBar" height={350} />
-                            </div>
-                        </div>
-
-                        <h4 className="text-xl font-semibold mt-6">Locations</h4>
-                        <ul className="mt-2 space-y-2">
-                            {business?.Locations.map(location => (
-                                <li key={location.location_id} className="bg-gray-200 p-2 rounded">
-                                    {business?.address}, {location.city}, {location.province} - {location.postal_code}
-                                </li>
-                            ))}
-                        </ul>
-
-                        <h4 className="text-xl font-semibold mt-6">Sellables</h4>
-                        <table className="min-w-full divide-y divide-gray-200 mt-2">
-                            <thead>
-                            <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Image</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-                            </tr>
-                            </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
-                            {business?.sellables.map(sellable => (
-                                <tr key={sellable.sellable_id} className="hover:bg-gray-100 group">
-
-                                    {/* ✅ Sellable Image */}
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <img
-                                            src={sellable.media.length > 0 ? sellable.media[0] : "/default-placeholder.png"}
-                                            alt={sellable.name}
-                                            className="h-16 w-16 object-cover rounded-md border border-gray-300"
-                                        />
-                                    </td>
-
-                                    {/* ✅ Sellable Details */}
-                                    <td className="px-6 py-4 whitespace-nowrap">{sellable.name}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap">{sellable.type}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap">₱{sellable.price}</td>
-
-                                    {/* ✅ Actions */}
-                                    <td className="px-6 py-4 whitespace-nowrap flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button onClick={() => handleEditSellable(sellable)} className="bg-yellow-500 text-white px-3 py-1 rounded">Edit</button>
-                                        <button onClick={() => handleDeleteSellable(sellable.sellable_id)} className="bg-red-500 text-white px-3 py-1 rounded">Delete</button>
-                                    </td>
+                            <h4 className="text-xl font-semibold mt-6">Sellables</h4>
+                            <table className="min-w-full divide-y divide-gray-200 mt-2">
+                                <thead>
+                                <tr>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Image</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                                 </tr>
-                            ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </main>
-            </div>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-200">
+                                {business?.sellables.map(sellable => (
+                                    <tr key={sellable.sellable_id} className="hover:bg-gray-100 group">
+
+                                        {/* ✅ Sellable Image */}
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <img
+                                                src={sellable.media.length > 0 ? sellable.media[0] : "/default-placeholder.png"}
+                                                alt={sellable.name}
+                                                className="h-16 w-16 object-cover rounded-md border border-gray-300"
+                                            />
+                                        </td>
+
+                                        {/* ✅ Sellable Details */}
+                                        <td className="px-6 py-4 whitespace-nowrap">{sellable.name}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap">{sellable.type}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap">₱{sellable.price}</td>
+
+                                        {/* ✅ Actions */}
+                                        <td className="px-6 py-4 whitespace-nowrap flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button onClick={() => handleEditSellable(sellable)} className="bg-yellow-500 text-white px-3 py-1 rounded">Edit</button>
+                                            <button onClick={() => handleDeleteSellable(sellable.sellable_id)} className="bg-red-500 text-white px-3 py-1 rounded">Delete</button>
+                                        </td>
+                                    </tr>
+                                ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </main>
+                </div>
+            )}
+
+            {!isVerified && (
+                <div className="flex flex-col h-full w-full items-center justify-center">
+                    <p className="text-tr-0 mt-2">
+                        You need to submit a business verification request before you can start selling on <em>trompo</em>.
+                    </p>
+
+                    <button onClick={() => setIsModalOpen(true)} className="chat-button mt-2 bg-tr-0">
+                        Verify your business
+                    </button>
+                </div>
+            )}
+
+            {isModalOpen && (
+                <SubmitVerificationModal isOpen={isModalOpen} onClose={handleVerificationModalClose} business_id={business.business_id.toString()} />
+            )}
 
             {isEditModalOpen && selectedSellable && (
                 <EditSellableModal

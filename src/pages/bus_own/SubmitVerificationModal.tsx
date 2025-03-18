@@ -1,19 +1,13 @@
 import React, { useState, useRef } from "react";
 import { IoCloudUploadOutline } from "react-icons/io5";
-import { submitUserVerification } from "../../api.ts";
-import {SubmitIdModalProps} from "../../interfaces.ts";
+import { submitBusinessVerification } from "../../api.ts"; // Adjust import for business verification
+import { SubmitVerificationModalProps } from "../../interfaces.ts";
 
-const SubmitIdModal: React.FC<SubmitIdModalProps> = ({isOpen, onClose}) => {
+const SubmitVerificationModal: React.FC<SubmitVerificationModalProps> = ({ isOpen, onClose, business_id }) => {
     const [file, setFile] = useState<File | null>(null);
-    const fileInputRef = useRef<HTMLInputElement | null>(null); // ✅ Add ref for file input
+    const fileInputRef = useRef<HTMLInputElement | null>(null); // Add ref for file input
     const [success, setSuccess] = useState("");
     const [uploaded, setUploaded] = useState(false);
-
-    const onSuccess = () => {
-        setUploaded(true);
-        setSuccess("Verification submitted. Please wait patiently for the administrator to review your identification.");
-        setFile(null);
-    };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
@@ -32,15 +26,8 @@ const SubmitIdModal: React.FC<SubmitIdModalProps> = ({isOpen, onClose}) => {
         }
 
         const formData = new FormData();
-        formData.append("id_image", file); // Append the file
-
-        const userId = localStorage.getItem("user_id");  // Get user ID from localStorage
-        console.log(userId);
-        if (!userId) {
-            console.error("No user ID found");
-            return;
-        }
-
+        formData.append("business_permit", file); // Append the business permit file
+        console.log(business_id);
 
         // Log the FormData to inspect its contents
         for (let [key, value] of formData.entries()) {
@@ -48,13 +35,12 @@ const SubmitIdModal: React.FC<SubmitIdModalProps> = ({isOpen, onClose}) => {
         }
 
         try {
-            const result = await submitUserVerification(formData, userId);
-            console.log("Verification submitted successfully:", result);
+            const result = await submitBusinessVerification(formData, business_id);
+            console.log("Business verification submitted successfully:", result);
         } catch (error) {
-            console.error("Error submitting verification:", error);
+            console.error("Error submitting business verification:", error);
         }
     };
-
 
     const handleFileInputClick = () => {
         // Trigger the file input click when the link is clicked
@@ -67,14 +53,21 @@ const SubmitIdModal: React.FC<SubmitIdModalProps> = ({isOpen, onClose}) => {
         setFile(null); // Reset file state to allow re-upload
     };
 
+    const onSuccess = () => {
+        setUploaded(true);
+        setSuccess("Verification submitted. Please wait patiently for the administrator to review your business.");
+        setFile(null);
+        onClose();
+    };
+
     return (
         <>
             {isOpen && (
                 <div className="py-12 bg-black bg-opacity-50 transition duration-150 ease-in-out z-10 fixed inset-0 flex items-center justify-center">
                     <div className="p-10 bg-white rounded-xl z-5">
                         <div className="text-center">
-                            <p className="mt-5 text-2xl font-bold text-gray-900">Please upload a clear picture of your valid ID. The name must match the name of your account.</p>
-                            <p className="mt-2 text-sm text-gray-400">Accepted IDs: School ID, Passport, Driver's License, Voter's ID</p>
+                            <p className="mt-5 text-2xl font-bold text-gray-900">Please upload a clear picture of your business permit. <br/>The business name must match the name of the business you registered on <em className="text-tr-0">trompo.</em></p>
+                            <p className="mt-2 text-sm text-gray-400">Accepted Documents: Business Permit, Certificate of Registration</p>
                         </div>
                         <form className="mt-8 space-y-3" onSubmit={handleSubmit}>
                             <div className="grid grid-cols-1 space-y-2">
@@ -117,7 +110,7 @@ const SubmitIdModal: React.FC<SubmitIdModalProps> = ({isOpen, onClose}) => {
                                         <input
                                             id="select"
                                             type="file"
-                                            ref={fileInputRef} // ✅ Use the ref here
+                                            ref={fileInputRef} // Use the ref here
                                             className="hidden"
                                             onChange={handleFileChange}
                                         />
@@ -139,7 +132,7 @@ const SubmitIdModal: React.FC<SubmitIdModalProps> = ({isOpen, onClose}) => {
                                 <button
                                     type="button"
                                     className="my-5 w-1/2 flex justify-center bg-tr-0 text-gray-100 p-4 rounded-full tracking-wide font-semibold focus:outline-none focus:shadow-outline hover:bg-darkTR-0 shadow-lg cursor-pointer transition ease-in duration-300 hover:border-darkTR-0"
-                                    onClick={onClose}
+                                    onClick={onClose} // Close the modal when Cancel is clicked
                                 >
                                     Cancel
                                 </button>
@@ -148,7 +141,6 @@ const SubmitIdModal: React.FC<SubmitIdModalProps> = ({isOpen, onClose}) => {
                             {uploaded && (
                                 <p className="text-green-600">{success}</p>
                             )}
-
                         </form>
                     </div>
                 </div>
@@ -157,4 +149,4 @@ const SubmitIdModal: React.FC<SubmitIdModalProps> = ({isOpen, onClose}) => {
     );
 };
 
-export default SubmitIdModal;
+export default SubmitVerificationModal;

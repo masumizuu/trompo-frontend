@@ -301,8 +301,11 @@ export const deleteBusiness = async (business_id: number, user_id: number) => {
 };
 
 // ✅ Business Owner Submits Business Verification Request
-export const submitBusinessVerification = async (formData: FormData) => {
-    const token = localStorage.getItem("token");
+export const submitBusinessVerification = async (formData: FormData, businessId: string) => {
+    // Append the business ID to the FormData
+    formData.append("business_id", businessId);
+
+    const token = localStorage.getItem("token");  // Get the token from localStorage
     const response = await fetch(`${API_BASE_URL}/businesses/verify`, {
         method: "POST",
         headers: {

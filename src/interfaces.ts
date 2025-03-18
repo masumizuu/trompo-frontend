@@ -118,6 +118,17 @@ export interface EditUserModalProps {
     onSave: (updatedUser: any) => void;
 }
 
+export interface SubmitIdModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+}
+
+export interface SubmitVerificationModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    business_id: string;
+}
+
 export interface DisputeModalProps {
     dispute: Dispute;
     onClose: () => void;
