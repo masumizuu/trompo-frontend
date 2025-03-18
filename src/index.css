@@ -17,6 +17,16 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+* {
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+}
+
+
 a {
   font-weight: 500;
   color: #bc1823;
