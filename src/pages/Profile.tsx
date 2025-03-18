@@ -1,13 +1,17 @@
 import React, { useEffect, useState } from "react";
-import {getUserById, getBusinessByOwner, editUser} from "../api";
+import {getUserById, getBusinessByOwner} from "../api";
 import { User, Business } from "../interfaces";
 import EditProfileModal from "./components/EditProfileModal";
+import SubmitIdModal from "./components/SubmitIdModal";
 
 const Profile: React.FC = () => {
+
     const [user, setUser] = useState<User | null>(null);
     const [businesses, setBusinesses] = useState<Business[]>([]);
     const userId = localStorage.getItem("user_id") || "";
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [showSubmitVerificationButton, setShowSubmitVerificationButton] = useState(false); // default state
+    const [isIdModalOpen, setIsIdModalOpen] = useState(false); // default state
 
     const fetchUser = async () => {
         try {
@@ -21,6 +25,12 @@ const Profile: React.FC = () => {
 
                 // Ensure it's a valid object before setting state
                 setBusinesses(userBusiness && typeof userBusiness === "object" ? [userBusiness] : []);
+            }
+
+            if (userData.is_verified === false) {
+                setShowSubmitVerificationButton(true);
+            } else if (userData.is_verified === true) {
+                setShowSubmitVerificationButton(false);
             }
         } catch (error) {
             console.error("Failed to fetch user or business:", error);
@@ -73,7 +83,7 @@ const Profile: React.FC = () => {
                                     <div className="relative">
                                         <img
                                             alt="Profile"
-                                            src={user?.profile_picture || "/default-profile.jpg"}
+                                            src={user?.profile_picture || "/pfp/default-photo.jpg"}
                                             className="shadow-xl rounded-full h-36 w-36 border-4 border-white mt-4"
                                         />
                                     </div>
@@ -98,6 +108,21 @@ const Profile: React.FC = () => {
                                     <i className="fas fa-briefcase mr-2"></i>
                                     {user?.user_type === "BUSINESS_OWNER" ? "Business Owner" : "Customer"}
                                 </p>
+
+                                {showSubmitVerificationButton && (
+                                    <>
+
+                                        <p className="text-tr-0 mt-2">
+                                            Your account needs verification to fully enjoy <em>trompo's</em> features.
+                                        </p>
+
+                                        <button onClick={() => setIsIdModalOpen(true)} className="chat-button mt-2 bg-tr-0">
+                                            Verify your account
+                                        </button>
+                                    </>
+
+                                )}
+
                             </div>
 
                             {/* ✅ Business Section for Business Owners */}
@@ -134,12 +159,16 @@ const Profile: React.FC = () => {
             </section>
 
             {/* Edit Profile Modal */}
-            {isModalOpen && (
+            {isModalOpen && !showSubmitVerificationButton && (
                 <EditProfileModal
                     user={user!}
                     onClose={handleCloseModal}
                     onSave={handleSave}
                 />
+            )}
+
+            {isIdModalOpen && (
+                <SubmitIdModal />
             )}
         </main>
     );

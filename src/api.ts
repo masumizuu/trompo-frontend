@@ -148,7 +148,10 @@ export const deleteUser = async (user_id: number) => {
 /////////////////////////////////////////////////////////
 
 // ✅ User Submits ID for Verification
-export const submitUserVerification = async (formData: FormData) => {
+export const submitUserVerification = async (formData: FormData, userId: string) => {
+    // Append the user ID to the FormData
+    formData.append("user_id", userId);
+
     const response = await fetch(`${API_BASE_URL}/users/verify`, {
         method: "POST",
         body: formData,
