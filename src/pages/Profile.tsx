@@ -1,35 +1,52 @@
 import React, { useEffect, useState } from "react";
-import { getUserById, getBusinessByOwner } from "../api";
+import {getUserById, getBusinessByOwner, editUser} from "../api";
 import { User, Business } from "../interfaces";
+import EditProfileModal from "./components/EditProfileModal";
 
 const Profile: React.FC = () => {
     const [user, setUser] = useState<User | null>(null);
     const [businesses, setBusinesses] = useState<Business[]>([]);
     const userId = localStorage.getItem("user_id") || "";
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
-    useEffect(() => {
-        const fetchUser = async () => {
-            try {
-                const userData = await getUserById(Number(userId));
-                setUser(userData);
+    const fetchUser = async () => {
+        try {
+            const userData = await getUserById(Number(userId));
+            setUser(userData);
 
-                if (userData.user_type === "BUSINESS_OWNER") {
-                    const userBusiness = await getBusinessByOwner(userId);
+            if (userData.user_type === "BUSINESS_OWNER") {
+                const userBusiness = await getBusinessByOwner(userId);
 
-                    console.log("Business owned:", userBusiness); // ✅ Debugging
+                console.log("Business owned:", userBusiness); // ✅ Debugging
 
-                    // Ensure it's a valid object before setting state
-                    setBusinesses(userBusiness && typeof userBusiness === "object" ? [userBusiness] : []);
-                }
-            } catch (error) {
-                console.error("Failed to fetch user or business:", error);
+                // Ensure it's a valid object before setting state
+                setBusinesses(userBusiness && typeof userBusiness === "object" ? [userBusiness] : []);
             }
-        };
+        } catch (error) {
+            console.error("Failed to fetch user or business:", error);
+        }
+    };
+
+
+    const handleOpenModal = () => {
+        setIsModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+    };
+
+    const handleSave = (updatedUser: User) => {
+        setUser(updatedUser); // Update the user state with the updated user data
+        setIsModalOpen(false); // Close the modal after saving
 
         fetchUser();
+    };
+
+    // Fetch user data when component mounts or userId changes
+    useEffect(() => {
+        fetchUser();
     }, [userId]);
-
-
 
     return (
         <main className="profile-page">
@@ -63,7 +80,8 @@ const Profile: React.FC = () => {
                                 </div>
 
                                 {/* edit profile button */}
-                                <button className="absolute top-6 right-6 bg-black text-white font-bold px-4 py-2 rounded hover:shadow-md transition-all">
+                                <button className="absolute top-6 right-6 bg-black text-white font-bold px-4 py-2 rounded hover:shadow-md transition-all"
+                                        onClick={handleOpenModal}>
                                     Edit Profile
                                 </button>
                             </div>
@@ -114,6 +132,15 @@ const Profile: React.FC = () => {
                     </div>
                 </div>
             </section>
+
+            {/* Edit Profile Modal */}
+            {isModalOpen && (
+                <EditProfileModal
+                    user={user!}
+                    onClose={handleCloseModal}
+                    onSave={handleSave}
+                />
+            )}
         </main>
     );
 };

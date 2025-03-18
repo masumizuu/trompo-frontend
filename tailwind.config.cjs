@@ -9,7 +9,7 @@ module.exports = {
             },
             colors: {
                 tr: ['#bc1823'],
-                darkTR: ['#8F111A']
+                darkTR: ['#8F111A'],
                 cr: ['#fff9f3']
             },
         },

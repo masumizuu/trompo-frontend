@@ -8,7 +8,8 @@ import BusinessOwnerDashboard from "./pages/bus_own/BODashboard.tsx";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import Profile from "./pages/Profile.tsx";
 import ProtectedRoute from "./ProtectedRoute";
-import StoreView from "./pages/StoreView.tsx"; // ✅ Import ProtectedRoute
+import StoreView from "./pages/StoreView.tsx";
+import ChatPage from "./pages/ChatPage";
 
 export default function App() {
     return (
@@ -19,14 +20,11 @@ export default function App() {
                     <Route index element={<LandingPage />} />
                     <Route path="browse" element={<Browse />} />
                     <Route path="profile" element={<Profile />} />
+                    <Route path="chat/:businessId" element={<ChatPage />} />
 
                     {/* ✅ Store View Route (Passes Business ID) */}
                     <Route path="store/:businessId" element={<StoreView />} />
 
-                    {/* ✅ Protected Admin Route */}
-                    <Route element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
-                        <Route path="admin-dashboard" element={<AdminDashboard />} />
-                    </Route>
 
                     {/* ✅ Protected Business Owner Route */}
                     <Route element={<ProtectedRoute allowedRoles={["BUSINESS_OWNER"]} />}>
@@ -35,6 +33,11 @@ export default function App() {
                 </Route>
 
                 {/* STANDALONE ROUTES */}
+                {/* ✅ Protected Admin Route */}
+                <Route element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
+                    <Route path="/admin-dashboard" element={<AdminDashboard />} />
+                </Route>
+
                 <Route path="/login" element={<LoginForm />} />
                 <Route path="/signup" element={<SignUpForm />} />
             </Routes>

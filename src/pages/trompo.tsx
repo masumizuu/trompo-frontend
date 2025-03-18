@@ -7,7 +7,7 @@ function TrompoLayout() {
     return (
         <div className="w-screen min-h-screen flex flex-col overflow-x-hidden">
             {/* Navbar */}
-            <header className="absolute top-0 left-0 w-full z-50">
+            <header className="absolute top-0 left-0 w-full z-10">
                 <CustomHeader />
             </header>
 
@@ -17,7 +17,7 @@ function TrompoLayout() {
             </main>
 
             {/* Footer */}
-            <footer className="z-50">
+            <footer className="z-1">
                 <CustomFooter />
             </footer>
         </div>

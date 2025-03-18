@@ -152,31 +152,10 @@ function BusinessOwnerDashboard() {
     if (error) return <p className="text-red-500 p-4">{error}</p>;
 
     return (
-        <div className="flex h-screen bg-gray-100">
-            <aside className="z-20 flex-shrink-0 hidden w-60 pl-2 overflow-y-auto md:block bg-tr-0">
-                <div className="text-white">
-                    <div className="flex p-2">
-                        <div className="flex py-3 px-2 items-center">
-                            <img src="/trompo.svg" alt="trompo" className="h-5 w-5" />
-                            <p className="ml-2 font-semibold italic">TROMPO</p>
-                        </div>
-                    </div>
-                    <div className="flex justify-center">
-                        <div>
-                            <img className="h-24 w-24 rounded-full object-cover border-4 border-green-400" src={profilePhoto} alt="Profile" />
-                            <p className="text-base text-gray-100 pt-2 text-center">{userName}</p>
-                            <p className="uppercase text-xs text-gray-100 pt-2 text-center">Business Owner</p>
-                        </div>
-                    </div>
-                    <div className="flex flex-row p-4 gap-2 text-gray-100 cursor-pointer hover:underline" onClick={handleLogout}>
-                        <span><CiLogout className="h-7 w-7 font-bold" /></span>
-                        <span>Log Out</span>
-                    </div>
-                </div>
-            </aside>
+        <div className="flex h-screen bg-gray-100 pt-20">
 
-            <div className="flex flex-col flex-1 w-full overflow-y-auto">
-                <header className="z-40 py-4 bg-tr-0">
+            <div className="flex flex-col flex-1 w-full mb-4 overflow-y-auto">
+                <header className="z-1 py-4 bg-tr-0">
                     <div className="flex items-center justify-between h-8 px-6 mx-auto">
                         <h2 className="text-white text-lg font-semibold">Business Dashboard</h2>
                     </div>

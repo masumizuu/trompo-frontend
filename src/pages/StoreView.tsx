@@ -1,14 +1,17 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { getBusinessById, getUserById } from "../api";
 import { Business, Sellable, User } from "../interfaces";
 import { BsShopWindow } from "react-icons/bs";
+import Chat from "./Chat";
 
 const StoreView: React.FC = () => {
+    const navigate = useNavigate();
     const { businessId } = useParams();
     const [business, setBusiness] = useState<Business | null>(null);
     const [sellables, setSellables] = useState<Sellable[]>([]);
     const [owner, setOwner] = useState<User | null>(null); // ✅ Owner state
+    const [showChat, setShowChat] = useState(false);
 
     useEffect(() => {
         const fetchBusiness = async () => {
@@ -86,6 +89,10 @@ const StoreView: React.FC = () => {
                                 <p className="text-gray-600 mt-2">
                                     🏠 Owned by: {owner ? `${owner.first_name} ${owner.last_name}` : "Loading..."}
                                 </p>
+
+                                <button onClick={() => navigate(`/chat/${business.business_id}`)} className="chat-button">
+                                    💬 Chat with Seller
+                                </button>
                             </div>
 
                             {/* ✅ Sellables Grid */}

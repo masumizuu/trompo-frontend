@@ -27,10 +27,8 @@ function LoginForm() {
             // Redirect based on user_type
             if (data.user.user_type === "ADMIN") {
                 navigate("/admin-dashboard"); // Placeholder - replace with actual route
-            } else if (data.user.user_type === "BUSINESS_OWNER") {
-                navigate("/business-dashboard"); // Placeholder - replace with actual route
-            } else if (data.user.user_type === "CUSTOMER") {
-                navigate("/customer-home"); // Placeholder - replace with actual route
+            } else {
+                navigate(-1);
             }
         } catch (err: any) {
             setError(err.message);

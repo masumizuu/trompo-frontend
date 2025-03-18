@@ -1,8 +1,14 @@
-import React, { useState } from 'react';
-import { EditUserModalProps } from "../../../interfaces";
-import {editUser} from "../../../api.ts";
+import React, { useState } from "react";
+import { User } from "../../interfaces";
+import {editUser} from "../../api.ts";
 
-const EditUserModal: React.FC<EditUserModalProps> = ({ user, onClose, onSave }) => {
+interface EditProfileModalProps {
+    user: User;
+    onClose: () => void;
+    onSave: (updatedUser: User) => void;
+}
+
+const EditProfileModal: React.FC<EditProfileModalProps> = ({ user, onClose, onSave }) => {
 
     const [error, setError] = useState<string | null>(null);
 
@@ -13,20 +19,14 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ user, onClose, onSave }) 
         phone_number: user.phone_number,
         user_type: user.user_type,
         is_verified: user.is_verified,
+        profile_picture: user.profile_picture,
     });
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-        setFormData(prev => ({
+        setFormData((prev) => ({
             ...prev,
-            [name]: value
-        }));
-    };
-
-    const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setFormData(prev => ({
-            ...prev,
-            is_verified: e.target.checked
+            [name]: value,
         }));
     };
 
@@ -37,6 +37,10 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ user, onClose, onSave }) 
             const updatedUser = await editUser(user.user_id, formData); // Send formData directly
             onSave(updatedUser); // Pass updated user data to parent component
             onClose(); // Close the modal after saving
+
+            // Trigger a full page reload
+            window.location.reload(); // Refresh the page to reflect the changes
+
         } catch (err) {
             setError("Failed to update profile.");
             console.log(error, err.message);
@@ -85,28 +89,6 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ user, onClose, onSave }) 
                         className="mb-4 mt-2 text-gray-600 focus:outline-none focus:border focus:border-tr-0 font-normal w-full h-10 pl-3 text-sm border-gray-300 rounded border bg-gray-100"
                     />
 
-                    <label className="text-gray-800 text-sm font-bold leading-tight tracking-normal">User Type</label>
-                    <select
-                        name="user_type"
-                        value={formData.user_type}
-                        onChange={handleChange}
-                        className="mb-4 mt-2 text-gray-600 focus:outline-none focus:border focus:border-tr-0 font-normal w-full h-10 pl-3 text-sm border-gray-300 rounded border bg-gray-100"
-                    >
-                        <option value="CUSTOMER">Customer</option>
-                        <option value="BUSINESS_OWNER">Business Owner</option>
-                        <option value="ADMIN">Admin</option>
-                    </select>
-
-                    <label className="flex items-center text-gray-800 text-sm font-bold leading-tight tracking-normal">
-                        <input
-                            type="checkbox"
-                            checked={formData.is_verified}
-                            onChange={handleCheckboxChange}
-                            className="mr-2"
-                        />
-                        Verified
-                    </label>
-
                     <div className="flex items-center justify-start w-full mt-6">
                         <button
                             onClick={handleSubmit}
@@ -139,4 +121,4 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ user, onClose, onSave }) 
     );
 };
 
-export default EditUserModal;
+export default EditProfileModal;

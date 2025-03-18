@@ -29,6 +29,7 @@ const CustomHeader = () => {
     const [userName, setUserName] = useState<string>("");
     const [userEmail, setUserEmail] = useState<string>("");
     const [userType, setUserType] = useState<string>("");
+    const [userData, setUserData] = useState<any>(null); // Store user data here
     const user_id = localStorage.getItem("user_id") || "";
 
     const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -38,17 +39,26 @@ const CustomHeader = () => {
             if (!user_id) return;
             try {
                 const userData = await getUserById(Number(user_id));
-                setProfilePhoto(userData.profile_picture || "/pfp/default-photo.jpg");
-                setUserName(`${userData.first_name} ${userData.last_name}`);
-                setUserEmail(userData.email || "user@email.com");
-                setUserType(userData.user_type);
+                setUserData(userData); // Update userData state
+
             } catch (error) {
                 console.error("Error fetching profile photo:", error);
             }
         };
 
-        fetchUserProfile();
-    }, [user_id]);
+        fetchUserProfile(); // Re-fetch when user_id changes
+    }, [user_id]); // Dependency on user_id ensures it fetches when user_id changes
+
+    useEffect(() => {
+        // Update profile information when userData changes
+        if (userData) {
+            setProfilePhoto(userData.profile_picture || "/pfp/default-photo.jpg");
+            setUserName(`${userData.first_name} ${userData.last_name}`);
+            setUserEmail(userData.email || "user@email.com");
+            setUserType(userData.user_type);
+        }
+    }, [userData]); // Re-run when userData changes
+
 
     return (
         <>
