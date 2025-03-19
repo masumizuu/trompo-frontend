@@ -9,7 +9,6 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import Profile from "./pages/Profile.tsx";
 import ProtectedRoute from "./ProtectedRoute";
 import StoreView from "./pages/StoreView.tsx";
-import ChatPage from "./pages/ChatPage";
 
 export default function App() {
     return (
@@ -20,7 +19,6 @@ export default function App() {
                     <Route index element={<LandingPage />} />
                     <Route path="browse" element={<Browse />} />
                     <Route path="profile" element={<Profile />} />
-                    <Route path="/chat/:businessId" element={<ChatPage />} />
 
                     {/* ✅ Store View Route (Passes Business ID) */}
                     <Route path="store/:businessId" element={<StoreView />} />
