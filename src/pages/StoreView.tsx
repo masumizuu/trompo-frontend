@@ -34,6 +34,11 @@ const StoreView: React.FC = () => {
         fetchBusiness();
     }, [businessId]);
 
+    const handleClick = () => {
+        navigate(`/chat/${businessId}`);
+    };
+
+
     if (!business) return <p className="text-center text-gray-500 py-10">Loading business details...</p>;
 
     return (
@@ -90,7 +95,7 @@ const StoreView: React.FC = () => {
                                     🏠 Owned by: {owner ? `${owner.first_name} ${owner.last_name}` : "Loading..."}
                                 </p>
 
-                                <button onClick={() => navigate(`/chat/${business.business_id}`)} className="chat-button mt-2 bg-tr-0">
+                                <button onClick={handleClick} className="chat-button mt-2 bg-tr-0">
                                     💬 Chat with Seller
                                 </button>
                             </div>

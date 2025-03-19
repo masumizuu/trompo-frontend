@@ -20,7 +20,7 @@ export default function App() {
                     <Route index element={<LandingPage />} />
                     <Route path="browse" element={<Browse />} />
                     <Route path="profile" element={<Profile />} />
-                    <Route path="chat/:businessId" element={<ChatPage />} />
+                    <Route path="/chat/:businessId" element={<ChatPage />} />
 
                     {/* ✅ Store View Route (Passes Business ID) */}
                     <Route path="store/:businessId" element={<StoreView />} />

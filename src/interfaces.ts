@@ -104,6 +104,33 @@ export interface VerificationRequest {
 
 // COMPONENTS PROPS
 
+// Define the interface for messages
+export interface Message {
+    chat_id: number;
+    senderId: string;
+    receiverId: string;
+    message: string;
+    is_read: boolean;
+    timestamp: string;
+    product?: {
+        name: string;
+        price: number;
+    };
+}
+
+// Define the interface for the Chat component props
+export interface ChatProps {
+    senderId: string;    // The ID of the user (sender)
+    receiverId: string;  // The ID of the business owner (receiver)
+}
+
+// Define the state interface for Chat component
+export interface ChatState {
+    messages: Message[]; // An array of Message objects
+    message: string;      // The message the user is currently typing
+    selectedProduct: any | null; // Any product attached to the message (if applicable)
+}
+
 export interface EditUserModalProps {
     user: {
         user_id: number;

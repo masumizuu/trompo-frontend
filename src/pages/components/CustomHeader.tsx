@@ -59,7 +59,6 @@ const CustomHeader = () => {
         }
     }, [userData]); // Re-run when userData changes
 
-
     return (
         <>
 
@@ -134,8 +133,9 @@ const CustomHeader = () => {
                                     </button>
 
                                     <button
-                                        className="relative p-2 bg-transparent text-tr-0 hover:bg-gray-100 hover:text-darkTR-0 focus:bg-gray-100 focus:text-darkTR-0 rounded-full border-transparent hover:border-transparent">
-                                        <span className="sr-only">Notifications</span>
+                                        className="relative p-2 bg-transparent text-tr-0 hover:bg-gray-100 hover:text-darkTR-0 focus:bg-gray-100 focus:text-darkTR-0 rounded-full border-transparent hover:border-transparent"
+                                        onClick={() => navigate(`/chat/${user_id}`)}>
+                                        <span className="sr-only">Chats</span>
                                         <span className="absolute top-0 right-0 h-2 w-2 mt-1 mr-2 bg-red-500 rounded-full"></span>
                                         <span className="absolute top-0 right-0 h-2 w-2 mt-1 mr-2 bg-red-500 rounded-full animate-ping"></span>
                                         <PiChatCircleTextLight className="text-3xl text-tr-0"/>

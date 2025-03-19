@@ -1,15 +1,20 @@
 import React, { useEffect, useState, useRef } from "react";
 import io from "socket.io-client";
+import { getChatHistory, sendMessage } from "../../api";
 
-const socket = io("http://localhost:5300", {
-    transports: ["websocket", "polling"],
-}); // ✅ Connect to the backend WebSocket server
+const socket = io("http://localhost:5300");
 
 const Chat: React.FC<{ senderId: string; receiverId: string }> = ({ senderId, receiverId }) => {
-    const [messages, setMessages] = useState<{ senderId: string; message: string; product?: any }[]>([]);
+    const [messages, setMessages] = useState<any[]>([]);
     const [message, setMessage] = useState("");
-    const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
-    const chatEndRef = useRef<HTMLDivElement>(null); // ✅ Auto-scroll reference
+
+    useEffect(() => {
+        const fetchChatHistory = async () => {
+            const chatHistory = await getChatHistory(senderId, receiverId);
+            setMessages(chatHistory);
+        };
+        fetchChatHistory();
+    }, [senderId, receiverId]);
 
     useEffect(() => {
         socket.on("receiveMessage", (newMessage) => {
@@ -21,63 +26,26 @@ const Chat: React.FC<{ senderId: string; receiverId: string }> = ({ senderId, re
         };
     }, []);
 
-    useEffect(() => {
-        chatEndRef.current?.scrollIntoView({ behavior: "smooth" }); // ✅ Auto-scroll to latest message
-    }, [messages]);
-
-    const sendMessage = () => {
-        if (message.trim() || selectedProduct) {
-            const chatData = { senderId, receiverId, message, product: selectedProduct };
-            socket.emit("sendMessage", chatData);
-            setMessages((prev) => [...prev, chatData]); // ✅ Optimistically add message
+    const handleSendMessage = async () => {
+        if (message.trim()) {
+            const sentMessage = await sendMessage(senderId, receiverId, message);
+            socket.emit("sendMessage", sentMessage);
+            setMessages((prev) => [...prev, sentMessage]);
             setMessage("");
-            setSelectedProduct(null);
         }
     };
 
     return (
-        <div className="chat-container p-4 border rounded-lg shadow-lg bg-white w-full max-w-md">
-            <div className="messages overflow-y-auto h-80 border-b pb-3">
+        <div className="chat-container">
+            <div className="messages">
                 {messages.map((msg, index) => (
-                    <div key={index} className={`message ${msg.senderId === senderId ? "sent" : "received"} mb-2`}>
-                        <p className="p-2 rounded-lg bg-gray-200 text-black">{msg.message}</p>
-                        {msg.product && (
-                            <div className="p-2 mt-1 border rounded-lg bg-gray-100">
-                                <strong>{msg.product.name}</strong> - ₱{msg.product.price}
-                            </div>
-                        )}
+                    <div key={index} className={msg.senderId === senderId ? "sent" : "received"}>
+                        <p>{msg.message}</p>
                     </div>
                 ))}
-                <div ref={chatEndRef} />
             </div>
-
-            {/* Selected Product Preview */}
-            {selectedProduct && (
-                <div className="selected-product p-2 bg-gray-100 rounded mt-2 flex justify-between items-center">
-                    <strong>{selectedProduct.name}</strong> - ₱{selectedProduct.price}
-                    <button onClick={() => setSelectedProduct(null)} className="text-red-500">✕</button>
-                </div>
-            )}
-
-            <div className="input-area flex gap-2 mt-3">
-                <input
-                    type="text"
-                    placeholder="Type a message..."
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    className="flex-1 border rounded-lg p-2"
-                />
-                <button onClick={sendMessage} className="bg-blue-500 text-white px-4 py-2 rounded-lg">
-                    Send
-                </button>
-            </div>
-
-            {/* Mock product selection (Attach product to chat) */}
-            <button
-                onClick={() => setSelectedProduct({ name: "Sample Product", price: 500 })}
-                className="mt-3 bg-green-500 text-white px-4 py-2 rounded-lg w-full">
-                Attach Product
-            </button>
+            <input value={message} onChange={(e) => setMessage(e.target.value)} />
+            <button onClick={handleSendMessage}>Send</button>
         </div>
     );
 };
