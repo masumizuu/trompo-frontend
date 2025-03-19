@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { getBusinessById, getUserById } from "../api";
 import { Business, Sellable, User } from "../interfaces";
 import { BsShopWindow } from "react-icons/bs";
 
 const StoreView: React.FC = () => {
-    const navigate = useNavigate();
     const { businessId } = useParams();
     const [business, setBusiness] = useState<Business | null>(null);
     const [sellables, setSellables] = useState<Sellable[]>([]);

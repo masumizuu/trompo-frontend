@@ -81,6 +81,8 @@ function SignUpForm() {
                         <img src="/logo.svg" alt="logo" className="h-20" />
                     </div>
 
+                    <p className="text-tr-0">{error}</p>
+
                     {/* Social and Phone/Email Buttons */}
                     <div className="py-6 flex space-x-4 justify-center">
                         <div className="w-10 h-10 flex items-center justify-center rounded-full border-2 border-gray-800">

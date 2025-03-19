@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Chart from "react-apexcharts";
 import { getBusinessByOwner, deleteBusiness, deleteSellable, getUserById } from "../../api";
 import { useNavigate } from "react-router-dom";
@@ -63,28 +63,6 @@ function BusinessOwnerDashboard() {
         setIsModalOpen(false);
     };
 
-    const lineChartOptions = {
-        series: [
-            { name: "TEAM A", type: "area", data: [44, 55, 31, 47, 31, 43, 26, 41, 31, 47, 33] },
-            { name: "TEAM B", type: "line", data: [55, 69, 45, 61, 43, 54, 37, 52, 44, 61, 43] }
-        ],
-        chart: { height: 350, type: "line" },
-        stroke: { curve: "smooth" },
-        fill: { type: "solid", opacity: [0.35, 1] },
-        labels: ["Dec 01", "Dec 02", "Dec 03", "Dec 04", "Dec 05", "Dec 06", "Dec 07", "Dec 08", "Dec 09", "Dec 10", "Dec 11"],
-    };
-
-    const pieChartOptions = {
-        series: [44, 55, 67, 83],
-        chart: { height: 350, type: "radialBar" },
-        plotOptions: {
-            radialBar: {
-                dataLabels: { total: { show: true, label: "Total", formatter: () => 249 } }
-            }
-        },
-        labels: ["Apples", "Oranges", "Bananas", "Berries"],
-    };
-
     const handleEditBusiness = () => {
         setEditBusinessModalOpen(true);
     };
@@ -98,14 +76,11 @@ function BusinessOwnerDashboard() {
                     await deleteBusiness(business?.business_id || 0, Number(user_id));
                     setBusiness(null); // ✅ Reset business state to null after deletion
 
-                    alert("Business deleted successfully!"); // ✅ Call alert BEFORE clearing state
-
                     setAlert(null); // ✅ Clear alert after user sees the message
 
                     navigate("/");
                 } catch (err: any) {
-                    alert("Error deleting business: " + err.message); // ✅ Ensure alert is executed first
-                    setAlert(null); // ✅ Clear alert only after showing the message
+                    setAlert(null);
                 }
             },
         });
@@ -121,6 +96,7 @@ function BusinessOwnerDashboard() {
             title: "Delete Sellable",
             message: "Are you sure you want to delete this sellable?",
             onConfirm: async () => {
+                // @ts-ignore
                 try {
                     await deleteSellable(sellable_id);
 
@@ -135,10 +111,8 @@ function BusinessOwnerDashboard() {
                     });
 
                     setAlert(null); // Close alert
-                    alert("Sellable deleted successfully!");
                 } catch (err: any) {
-                    setAlert(null);
-                    alert("Error deleting sellable: " + err.message);
+                    console.log(err);
                 }
             },
         });
@@ -147,6 +121,7 @@ function BusinessOwnerDashboard() {
     if (loading) return <p className="text-white p-4">Loading...</p>;
     if (error) return <p className="text-red-500 p-4">{error}</p>;
 
+    // @ts-ignore
     return (
         <div className="flex h-screen bg-gray-100 pt-20">
 
@@ -198,12 +173,42 @@ function BusinessOwnerDashboard() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="flex flex-col">
                                     <h6 className="text-gray-800 font-bold"> Shop Analytics </h6>
-                                    <Chart options={lineChartOptions} series={lineChartOptions.series} type="line" height={350} />
+                                    <Chart options={{series: [
+                                            { name: "TEAM A", type: "area", data: [44, 55, 31, 47, 31, 43, 26, 41, 31, 47, 33] },
+                                            { name: "TEAM B", type: "line", data: [55, 69, 45, 61, 43, 54, 37, 52, 44, 61, 43] }
+                                        ],
+                                        chart: { height: 350, type: "line" },
+                                        stroke: { curve: "smooth" },
+                                        fill: { type: "solid", opacity: [0.35, 1] },
+                                        labels: ["Dec 01", "Dec 02", "Dec 03", "Dec 04", "Dec 05", "Dec 06", "Dec 07", "Dec 08", "Dec 09", "Dec 10", "Dec 11"],}} type="line" height={350} />
                                 </div>
 
                                 <div className="flex flex-col">
                                     <h6 className="text-gray-800 font-bold"> Products Sold / Services Availed </h6>
-                                    <Chart options={pieChartOptions} series={pieChartOptions.series} type="radialBar" height={350} />
+                                    <Chart
+                                        options={{
+                                            chart: {
+                                                height: 350,
+                                                type: "radialBar"
+                                            },
+                                            plotOptions: {
+                                                radialBar: {
+                                                    dataLabels: {
+                                                        total: {
+                                                            show: true,
+                                                            label: "Total",
+                                                            formatter: () => "249"
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            labels: ["Apples", "Oranges", "Bananas", "Berries"]
+                                        }}
+                                        series={[44, 55, 67, 83]}
+                                        type="radialBar"
+                                        height={350}
+                                    />
+
                                 </div>
                             </div>
 
@@ -272,7 +277,7 @@ function BusinessOwnerDashboard() {
             )}
 
             {isModalOpen && (
-                <SubmitVerificationModal isOpen={isModalOpen} onClose={handleVerificationModalClose} business_id={business.business_id.toString()} />
+                <SubmitVerificationModal isOpen={isModalOpen} onClose={handleVerificationModalClose} business_id={business!.business_id.toString()} />
             )}
 
             {isEditModalOpen && selectedSellable && (

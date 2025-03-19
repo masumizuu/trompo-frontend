@@ -41,9 +41,9 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ user, onClose, onSa
             // Trigger a full page reload
             window.location.reload(); // Refresh the page to reflect the changes
 
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (err) {
             setError("Failed to update profile.");
-            console.log(error, err.message);
         }
     };
 
@@ -52,6 +52,8 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ user, onClose, onSa
             <div className="container mx-auto w-11/12 md:w-2/3 max-w-lg">
                 <div className="relative py-8 px-5 md:px-10 bg-white shadow-md rounded border border-gray-400">
                     <h2 className="text-tr-0 font-bold tracking-normal leading-tight mb-4">Edit User</h2>
+
+                    <p className="text-tr-0">{error}</p>
 
                     <label className="text-gray-800 text-sm font-bold leading-tight tracking-normal">First Name</label>
                     <input

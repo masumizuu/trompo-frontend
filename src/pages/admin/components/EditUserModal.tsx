@@ -37,9 +37,9 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ user, onClose, onSave }) 
             const updatedUser = await editUser(user.user_id, formData); // Send formData directly
             onSave(updatedUser); // Pass updated user data to parent component
             onClose(); // Close the modal after saving
-        } catch (err) {
+        } catch (err: any) {
             setError("Failed to update profile.");
-            console.log(error, err.message);
+            console.log(error, err);
         }
     };
 

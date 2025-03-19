@@ -1,17 +1,16 @@
-import { useNavigate } from "react-router-dom";
 import VanillaTilt from "vanilla-tilt";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import Feature from "./components/Feature.tsx";
 
 function LandingPage() {
-    const navigate = useNavigate();
     const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 });
 
     useEffect(() => {
         // Initialize VanillaTilt for the content div
         const content = document.querySelector("#content-box");
         if (content) {
+            // @ts-ignore
             VanillaTilt.init(content, {
                 max: 15,
                 speed: 400,

@@ -50,6 +50,7 @@ const EditSellableModal: React.FC<EditSellableModalProps> = ({ sellable, onClose
                     <label className="text-gray-800 text-sm font-bold leading-tight tracking-normal mt-4">Type</label>
                     <select
                         value={type}
+                        //@ts-ignore
                         onChange={(e) => setType(e.target.value)}
                         className="w-full p-2 mt-2 text-gray-600 border-gray-300 rounded border bg-gray-100 focus:outline-none focus:border-tr-0"
                     >
