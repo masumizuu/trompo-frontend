@@ -1,6 +1,6 @@
 import {Business} from "./interfaces.ts";
 
-const API_BASE_URL = "http://localhost:5300/api";
+const API_BASE_URL = "https://trompo-backend-ma84zhf66-masumizuus-projects.vercel.app/";
 
 /////////////////////////////////////////////////////////
 // AUTH CALLS
@@ -29,7 +29,7 @@ export const registerUser = async (userData: {
     localStorage.setItem("token", data.token);
     localStorage.setItem("user_id", data.user.user_id.toString());
     localStorage.setItem("user_type", data.user.user_type);
-    localStorage.setItem("profile_picture", data.user.profile_picture || "/default-profile.jpg");
+    localStorage.setItem("profile_picture", data.user.profile_picture || "./pfp/default-profile.jpg");
 
     return data;
 };

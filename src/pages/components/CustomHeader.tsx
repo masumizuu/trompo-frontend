@@ -5,6 +5,7 @@ import CustomAlert from "./CustomAlert";
 import { CiCircleChevDown } from "react-icons/ci";
 import { IoIosNotificationsOutline } from "react-icons/io";
 import { PiChatCircleTextLight } from "react-icons/pi";
+import logo from "../../../public/trompo.svg";
 
 const CustomHeader = () => {
 
@@ -67,7 +68,7 @@ const CustomHeader = () => {
                 {/* logo */}
                 <div className="relative w-full max-w-md mr-2 flex flex-row gap-4">
 
-                    <img src="/trompo.svg" alt="logo" className="h-10 cursor-pointer" onClick={() => navigate("/")}/>
+                    <img src={logo} alt="logo" className="h-10 cursor-pointer" onClick={() => navigate("/")}/>
 
                     <input
                         type="text"
