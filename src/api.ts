@@ -1,6 +1,6 @@
 import {Business} from "./interfaces.ts";
 
-const API_BASE_URL = "https://trompo-backend-ma84zhf66-masumizuus-projects.vercel.app/";
+const API_BASE_URL = "https://trompo-backend.vercel.app/api";
 
 /////////////////////////////////////////////////////////
 // AUTH CALLS

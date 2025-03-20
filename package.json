@@ -12,6 +12,7 @@
   "dependencies": {
     "apexcharts": "^4.5.0",
     "axios": "^1.7.9",
+    "cors": "^2.8.5",
     "esbuild": "^0.25.0",
     "firebase": "^11.4.0",
     "firebase-tools": "^13.34.0",
